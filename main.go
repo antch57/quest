@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/antch57/quest/cmd"
+	logcmd "github.com/antch57/quest/cmd/log"
 	"github.com/urfave/cli/v3"
 )
 
@@ -14,12 +14,7 @@ func main() {
 		Name:  "quest",
 		Usage: "get shit done..",
 		Commands: []*cli.Command{
-			cmd.CreateCmd(),
-			cmd.ListCmd(),
-			cmd.EditCmd(),
-			cmd.DoneCmd(),
-			cmd.DeleteCmd(),
-			cmd.NukeCmd(),
+			logcmd.Command(),
 		},
 	}
 
