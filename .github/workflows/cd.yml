@@ -1,0 +1,55 @@
+name: build-release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, darwin, windows]
+        arch: [amd64, arm64]
+        exclude:
+          - os: darwin
+            arch: amd64 # allow both darwin/amd64 and darwin/arm64
+          - os: windows
+            arch: arm64 # skip windows/arm64 for now
+          - os: linux
+            arch: arm64 # skip linux/arm64 for now
+    env:
+      GOOS: ${{ matrix.os }}
+      GOARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: go mod download
+      - name: Build binary
+        run: |
+          BIN=quest-${{ matrix.os }}-${{ matrix.arch }}
+          if [ "${{ matrix.os }}" = "windows" ]; then BIN="$BIN.exe"; fi
+          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o $BIN .
+      - name: Upload binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: quest-${{ matrix.os }}-${{ matrix.arch }}
+          path: quest-${{ matrix.os }}-${{ matrix.arch }}*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: dist/**/*
