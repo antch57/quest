@@ -1,79 +1,98 @@
 # quest
 
-my personal CLI hub: starting with notes and todos, growing over time into a daily command center.
+![Go](https://img.shields.io/badge/Go-1.26-blue?logo=go)
+![CI](https://github.com/antch57/quest/actions/workflows/ci.yml/badge.svg)
+![Release](https://github.com/antch57/quest/actions/workflows/release-please.yml/badge.svg)
 
-## wizard's field notes
+Your personal command-line HQ for todos, notes, and daily tools—crafted to grow into a playful, powerful, and endlessly extensible adventurer’s toolkit.
 
-### v0.1.0 - Fork in the Enchanted Road
+---
 
-the party reached a crossroads and chose a clearer trail.
+## About
 
-progress made in this chapter:
+quest is a personal CLI hub: starting with notes and todos, growing into a daily command center for lightweight tools and quick logging. The goal: a small, personal, and fun-to-extend command wizard.
 
-- moved todo operations under the `quest log` command domain
-- reorganized command files into a future-ready structure under `cmd/log`
-- switched to explicit flags for key actions:
-  - `quest log create --title "..."`
-  - `quest log done --id <id>`
-  - `quest log delete --id <id>`
-  - `quest log edit --id <id> --title "..."`
-- kept `quest log nuke` as a dedicated high-impact action
-- rewired `main.go` so the `log` domain is now the primary quest board
+## Quick Start
 
-next quests on the map:
+### Install
 
-- add command-layer tests for `quest log` flows (`create`, `done`, `delete`, `edit`, `list`)
-- sharpen help text so required flags are obvious for every command
-- keep refining `quest log` UX before locking the final interface style
-- open the gates to web-powered utility commands once `quest log` is fully battle-tested
-
-### v0.0.1 - Apprentice's First Parchment
-quest started as a simple todo cli, but the longer-term idea is to turn it into a personal cli hub: one place for lightweight daily tools, quick logging, and small web-powered commands.
-
-the first big shift will be moving the current todo workflow under a dedicated `log` subcommand. instead of top-level commands like `quest create`, the log flow would become flag-driven and live under a single surface, for example:
+Clone and build from source:
 
 ```sh
-quest log --create "buy milk" --due 01-01-2030
-quest log --done 3
-quest log --list
-quest log --delete 4
+git clone https://github.com/antch57/quest.git
+cd quest
+go build -o quest .
 ```
 
-that keeps the current task system intact while making room for quest to grow into something broader.
+Or, if you have Go installed:
 
-from there, the project can branch into a few directions:
+```sh
+go install github.com/antch57/quest@latest
+```
 
-- keep evolving `quest log` into a better capture and review tool for tasks, notes, and daily activity
-- add web-powered commands that reach out to external services for useful daily info
-- experiment with commands for weather, headlines, github summaries, links, or other personal utility flows
-- keep using the project as a place to practice more go: http requests, json decoding, config handling, and larger cli structure
+### Usage
 
-the goal is not to make a giant framework. the goal is to build a small wizardy command center that feels personal, useful, and fun to extend.
+Add a todo:
+```sh
+./quest log create --title "Buy milk" --due 2026-05-01
+```
 
-## trail ahead
+List todos:
+```sh
+./quest log list
+```
 
-this is the forward-looking roadmap for quest.
+Mark a todo as done:
+```sh
+./quest log done --id 1
+```
 
-### phase 1 - harden the quest log
+Delete a todo:
+```sh
+./quest log delete --id 1
+```
 
-- add command-layer tests for create, done, delete, edit, and list
-- tighten usage and help output for required flags like --title and --id
-- smooth rough edges in command UX and error messaging
+See all commands and flags:
+```sh
+./quest log --help
+```
 
-### phase 2 - improve daily use
+## Roadmap (planned features & improvements)
 
-- add quick note capture flow (lightweight text entry)
-- add optional tags or categories for better organization
-- add better filtering and summary views for daily review
+### 2026-04-25 (current plan)
+- Add command-layer tests for all `quest log` subcommands (create, list, edit, done, delete, nuke)
+- Add a `quest weather` command to fetch and display current weather for a given location
+- Improve help output and flag validation for all commands
+- Add support for user-defined projects/tags on todos
+- Polish CLI UX (error messages, confirmation prompts, etc.)
 
-### phase 3 - open the outer world
+### Future ideas
+- Add a quick note capture flow (`quest note`)
+- Add a `quest headlines` command for daily news
+- Add config file support for API keys and user preferences
+- Add recurring tasks and reminders
+- Add web-powered commands for GitHub issues, calendar, or links
+- Optional: Web dashboard or TUI for richer review
 
-- introduce first web-powered command (for example weather or headlines)
-- add simple config support for external service settings
-- keep each new command small, practical, and easy to maintain
+---
 
-### phase 4 - evolve into a personal hub
+## Release Notes
 
-- keep expanding with tools that support real day-to-day workflow
-- maintain a clean command layout as new domains are added
-- continue using quest as a go learning lab while building useful features
+Release notes and changelog are managed automatically by [release-please](https://github.com/google-github-actions/release-please-action) and can be found in the [GitHub Releases](../../releases) tab.
+
+## How to contribute
+
+1. Fork and clone the repo
+2. Create a feature branch
+3. Use Conventional Commits (e.g., `feat:`, `fix:`, `chore:`)
+4. Open a PR (template auto-populates)
+5. All changes require PR review and CI to pass
+6. Run `gofmt`, `go vet`, and tests before pushing
+7. See the PR template for checklist
+
+## Roadmap update process
+
+- Add new roadmap entries at the top with the current date and keep them forward-looking
+- Never delete old entries—this is a living project plan
+
+---
