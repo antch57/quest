@@ -16,7 +16,8 @@ jobs:
   lint:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
+      - name: checkout repo
+        uses: actions/checkout@v6
 
       - name: setup go
         uses: actions/setup-go@v6
@@ -39,7 +40,8 @@ jobs:
   test:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
+      - name: checkout repo
+        uses: actions/checkout@v6
 
       - name: setup go
         uses: actions/setup-go@v6
@@ -47,9 +49,10 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: 'go.sum'
 
-      - run: |
-          go version
+      - name: download dependencies
+        run: |
           go mod download
+          go version
 
       - name: run tests
         run: |
