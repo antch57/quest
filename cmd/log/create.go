@@ -1,4 +1,4 @@
-package cmd
+package log
 
 import (
 	"context"
@@ -15,6 +15,11 @@ func CreateCmd() *cli.Command {
 		Usage: "create a new todo",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
+				Name:    "title",
+				Aliases: []string{"t"},
+				Usage:   "title for the log entry",
+			},
+			&cli.StringFlag{
 				Name:    "due",
 				Aliases: []string{"d"},
 				Usage:   "due date of the todo (format: MM-DD-YYYY)",
@@ -26,9 +31,9 @@ func CreateCmd() *cli.Command {
 			},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			title := c.Args().First()
+			title := c.String("title")
 			if title == "" {
-				return fmt.Errorf("usage: quest create <title>")
+				return fmt.Errorf("usage: quest log create --title <title>")
 			}
 
 			dueDateStr := c.String("due")

@@ -1,4 +1,4 @@
-package cmd
+package log
 
 import (
 	"context"
@@ -15,13 +15,19 @@ func DeleteCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "delete",
 		Usage: "delete task by id",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "id",
+				Usage: "id of the task to delete",
+			},
+		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			arg := c.Args().First()
-			if arg == "" {
-				return fmt.Errorf("usage: quest delete <task id>")
+			idStr := c.String("id")
+			if idStr == "" {
+				return fmt.Errorf("usage: quest log delete --id <task id>")
 			}
 
-			id, err := strconv.Atoi(arg)
+			id, err := strconv.Atoi(idStr)
 			if err != nil {
 				return err
 			}

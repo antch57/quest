@@ -1,4 +1,4 @@
-package cmd
+package log
 
 import (
 	"context"
@@ -15,10 +15,16 @@ func DoneCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "done",
 		Usage: "mark task as done by id",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "id",
+				Usage: "id of the task to mark as done",
+			},
+		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			arg := c.Args().First()
+			arg := c.String("id")
 			if arg == "" {
-				return fmt.Errorf("usage: quest done <task id>")
+				return fmt.Errorf("usage: quest log done --id <task id>")
 			}
 
 			id, err := strconv.Atoi(arg)
@@ -48,6 +54,10 @@ func EditCmd() *cli.Command {
 		Usage: "edit a task by id",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
+				Name:  "id",
+				Usage: "id of the task to edit",
+			},
+			&cli.StringFlag{
 				Name:    "title",
 				Aliases: []string{"t"},
 				Usage:   "new title for the todo",
@@ -76,12 +86,12 @@ func EditCmd() *cli.Command {
 			},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			arg := c.Args().First()
-			if arg == "" {
-				return fmt.Errorf("usage: quest edit <task id> [flags]")
+			idStr := c.String("id")
+			if idStr == "" {
+				return fmt.Errorf("usage: quest log edit --id <task id> [flags]")
 			}
 
-			id, err := strconv.Atoi(arg)
+			id, err := strconv.Atoi(idStr)
 			if err != nil {
 				return err
 			}
