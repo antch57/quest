@@ -1,0 +1,26 @@
+# release-please - automatically create a new release when changes are pushed to main
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+name: release-please
+
+jobs:
+  release:
+    runs-on: ubuntu-slim
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v6
+
+      - name: release-please
+        uses: google-github-actions/release-please-action@v5
+        with:
+          release-type: go
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
