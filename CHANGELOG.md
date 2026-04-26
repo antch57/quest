@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.3](https://github.com/antch57/quest/compare/v0.1.2...v0.1.3) (2026-04-26)
+
+
+### Bug Fixes
+
+* QUEST-0 - update badges ([#15](https://github.com/antch57/quest/issues/15)) ([86b93d0](https://github.com/antch57/quest/commit/86b93d0081b7f47d2cd043a2a0fc4a38bb851973))
+* release v0.1.3 ([#17](https://github.com/antch57/quest/issues/17)) ([abde197](https://github.com/antch57/quest/commit/abde19707c2c9458700e547f86aca5ec6f92d4da))
+
+
+### Miscellaneous Chores
+
+* release v0.1.3 ([#16](https://github.com/antch57/quest/issues/16)) ([b073e2c](https://github.com/antch57/quest/commit/b073e2cbde4c844b12e6109f522e79f4865f1759))
+
 ## [0.1.1](https://github.com/antch57/quest/compare/v0.1.0...v0.1.1) (2026-04-26)
 
 
