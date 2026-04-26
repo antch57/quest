@@ -17,11 +17,11 @@ jobs:
         arch: [amd64, arm64]
         exclude:
           - os: darwin
-            arch: amd64 # allow both darwin/amd64 and darwin/arm64
+            arch: amd64
           - os: windows
-            arch: arm64 # skip windows/arm64 for now
+            arch: arm64
           - os: linux
-            arch: arm64 # skip linux/arm64 for now
+            arch: arm64
     env:
       GOOS: ${{ matrix.os }}
       GOARCH: ${{ matrix.arch }}
