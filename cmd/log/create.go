@@ -9,20 +9,34 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+func createID(todos []store.Todo) string {
+	max := 0
+	for _, todo := range todos {
+		var idInt int
+		_, err := fmt.Sscanf(todo.ID, "%d", &idInt)
+		if err == nil && idInt > max {
+			max = idInt
+		}
+	}
+	return fmt.Sprintf("%d", max+1)
+}
+
 func CreateCmd() *cli.Command {
 	return &cli.Command{
-		Name:  "create",
-		Usage: "create a new todo",
+		Name:      "create",
+		Usage:     "create a new todo item.",
+		UsageText: `quest log create --title "buy groceries"`,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:    "title",
-				Aliases: []string{"t"},
-				Usage:   "title for the log entry",
+				Name:     "title",
+				Aliases:  []string{"t"},
+				Usage:    "title for the todo (required)",
+				Required: true,
 			},
 			&cli.StringFlag{
 				Name:    "due",
 				Aliases: []string{"d"},
-				Usage:   "due date of the todo (format: MM-DD-YYYY)",
+				Usage:   "due date for the todo (format: mm-dd-yyyy)",
 			},
 			&cli.StringFlag{
 				Name:    "project",
@@ -32,39 +46,26 @@ func CreateCmd() *cli.Command {
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
 			title := c.String("title")
-			if title == "" {
-				return fmt.Errorf("usage: quest log create --title <title>")
-			}
-
+			project := c.String("project")
 			dueDateStr := c.String("due")
+
 			var dueDate *time.Time
 			if dueDateStr != "" {
 				parsedDueDate, err := time.Parse("01-02-2006", dueDateStr)
 				if err != nil {
-					return fmt.Errorf("invalid due date format: %v", err)
+					cli.ShowCommandHelp(ctx, c, "create")
+					return fmt.Errorf("invalid due date format (expected mm-dd-yyyy): %v", err)
 				}
 				dueDate = &parsedDueDate
 			}
-
-			project := c.String("project")
 
 			todos, err := store.Load()
 			if err != nil {
 				return err
 			}
 
-			createID := func() int {
-				max := 0
-				for _, todo := range todos {
-					if todo.ID > max {
-						max = todo.ID
-					}
-				}
-				return max + 1
-			}
-
 			todos = append(todos, store.Todo{
-				ID:        createID(),
+				ID:        createID(todos),
 				Title:     title,
 				CreatedAt: time.Now(),
 				DueDate:   dueDate,
@@ -73,7 +74,7 @@ func CreateCmd() *cli.Command {
 			if err := store.Save(todos); err != nil {
 				return err
 			}
-			fmt.Printf("Created todo: %s\n", title)
+			fmt.Printf("created todo: %s\n", title)
 			return nil
 		},
 	}
