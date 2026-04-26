@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/antch57/quest/compare/v0.1.0...v0.1.1) (2026-04-26)
+
+
+### Bug Fixes
+
+* QUEST-17 - adjust Codecov config until tests are written ([#12](https://github.com/antch57/quest/issues/12)) ([746d719](https://github.com/antch57/quest/commit/746d71981ed64a1cf06d8e7e717f92e39f890b69))
+
 ## [0.1.0](https://github.com/antch57/quest/compare/v0.0.1...v0.1.0) (2026-04-26)
 
 
