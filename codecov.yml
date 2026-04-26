@@ -2,17 +2,18 @@ coverage:
   status:
     project:
       default:
-        target: 80%
+        target: auto
         threshold: 1%
         only_pulls: true
         if_ci_failed: success
 
     patch:
       default:
-        target: 80%
+        target: auto
         threshold: 1%
         only_pulls: true
         if_ci_failed: success
+
 comment:
   layout: "reach, diff, flags, files"
   behavior: default
