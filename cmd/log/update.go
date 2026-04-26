@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/antch57/quest/store"
@@ -13,36 +12,27 @@ import (
 
 func DoneCmd() *cli.Command {
 	return &cli.Command{
-		Name:  "done",
-		Usage: "mark task as done by id",
+		Name:      "done",
+		Usage:     "mark task as done by id",
+		UsageText: "quest log done --id <task id>",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "id",
-				Usage: "id of the task to mark as done",
+				Name:     "id",
+				Usage:    "id of the task to mark as done",
+				Required: true,
 			},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			arg := c.String("id")
-			if arg == "" {
-				return fmt.Errorf("usage: quest log done --id <task id>")
-			}
-
-			id, err := strconv.Atoi(arg)
-			if err != nil {
-				return err
-			}
-
+			id := c.String("id")
 			todos, idx, err := store.LoadAndFindIndexByID(id)
 			if err != nil {
 				if err == os.ErrNotExist {
-					return fmt.Errorf("task with id %d not found", id)
+					return fmt.Errorf("task with id %s not found", id)
 				}
 				return err
 			}
-
 			todos[idx].Done = true
 			fmt.Printf("you have completed: \"%s\"\n", todos[idx].Title)
-
 			return store.Save(todos)
 		},
 	}
@@ -50,12 +40,14 @@ func DoneCmd() *cli.Command {
 
 func EditCmd() *cli.Command {
 	return &cli.Command{
-		Name:  "edit",
-		Usage: "edit a task by id",
+		Name:      "edit",
+		Usage:     "edit a task by id",
+		UsageText: "quest log edit --id <task id> [options]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "id",
-				Usage: "id of the task to edit",
+				Name:     "id",
+				Usage:    "id of the task to edit (required)",
+				Required: true,
 			},
 			&cli.StringFlag{
 				Name:    "title",
@@ -67,14 +59,6 @@ func EditCmd() *cli.Command {
 				Aliases: []string{"d"},
 				Usage:   "new due date for the todo (format: MM-DD-YYYY)",
 			},
-			&cli.BoolFlag{
-				Name:  "done",
-				Usage: "mark the todo as done",
-			},
-			&cli.BoolFlag{
-				Name:  "undone",
-				Usage: "mark the todo as not done",
-			},
 			&cli.StringFlag{
 				Name:    "project",
 				Aliases: []string{"p"},
@@ -84,22 +68,21 @@ func EditCmd() *cli.Command {
 				Name:  "clear-due",
 				Usage: "clear the due date for the todo (no value needed)",
 			},
+			&cli.BoolFlag{
+				Name:  "done",
+				Usage: "mark the todo as done",
+			},
+			&cli.BoolFlag{
+				Name:  "undone",
+				Usage: "mark the todo as not done",
+			},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			idStr := c.String("id")
-			if idStr == "" {
-				return fmt.Errorf("usage: quest log edit --id <task id> [flags]")
-			}
-
-			id, err := strconv.Atoi(idStr)
-			if err != nil {
-				return err
-			}
-
+			id := c.String("id")
 			todos, idx, err := store.LoadAndFindIndexByID(id)
 			if err != nil {
 				if err == os.ErrNotExist {
-					return fmt.Errorf("task with id %d not found", id)
+					return fmt.Errorf("task with id %s not found", id)
 				}
 				return err
 			}

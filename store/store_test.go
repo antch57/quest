@@ -37,7 +37,7 @@ func TestLoadFileNotExist(t *testing.T) {
 }
 
 func TestLoadSuccess(t *testing.T) {
-	seedStoreFile(t, `[{"id":1,"title":"Test Todo","done":false}]`)
+	seedStoreFile(t, `[{"id":"1","title":"Test Todo","done":false}]`)
 	todos, err := Load()
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -45,7 +45,7 @@ func TestLoadSuccess(t *testing.T) {
 	if len(todos) != 1 {
 		t.Fatalf("expected 1 todo, got %d", len(todos))
 	}
-	if todos[0].ID != 1 || todos[0].Title != "Test Todo" || todos[0].Done != false {
+	if todos[0].ID != "1" || todos[0].Title != "Test Todo" || todos[0].Done != false {
 		t.Errorf("unexpected todo data: %v", todos[0])
 	}
 }
@@ -53,7 +53,7 @@ func TestLoadSuccess(t *testing.T) {
 func TestSaveSuccess(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	todos := []Todo{
-		{ID: 1, Title: "Test Todo", Done: false},
+		{ID: "1", Title: "Test Todo", Done: false},
 	}
 	if err := Save(todos); err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -82,22 +82,22 @@ func TestSaveSuccess(t *testing.T) {
 }
 
 func TestLoadAndFindIndexByIDSuccess(t *testing.T) {
-	seedStoreFile(t, `[{"id":1,"title":"Test Todo","done":false}, {"id":2,"title":"Another Todo","done":true}]`)
-	todos, index, err := LoadAndFindIndexByID(1)
+	seedStoreFile(t, `[{"id":"1","title":"Test Todo","done":false}, {"id":"2","title":"Another Todo","done":true}]`)
+	todos, index, err := LoadAndFindIndexByID("1")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 	if index != 0 {
 		t.Fatalf("expected index 0, got %d", index)
 	}
-	if todos[index].ID != 1 || todos[index].Title != "Test Todo" || todos[index].Done != false {
+	if todos[index].ID != "1" || todos[index].Title != "Test Todo" || todos[index].Done != false {
 		t.Errorf("unexpected todo data: %v", todos[index])
 	}
 }
 
 func TestLoadAndFindIndexByIDNotFound(t *testing.T) {
-	seedStoreFile(t, `[{"id":1,"title":"Test Todo","done":false}]`)
-	todos, index, err := LoadAndFindIndexByID(999)
+	seedStoreFile(t, `[{"id":"1","title":"Test Todo","done":false}]`)
+	todos, index, err := LoadAndFindIndexByID("999")
 	if !os.IsNotExist(err) {
 		t.Fatalf("expected os.ErrNotExist, got %v", err)
 	}
@@ -112,7 +112,7 @@ func TestLoadAndFindIndexByIDNotFound(t *testing.T) {
 func TestSaveAndLoad(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	expected := []Todo{
-		{ID: 1, Title: "Test Todo", Done: false},
+		{ID: "1", Title: "Test Todo", Done: false},
 	}
 
 	if err := Save(expected); err != nil {
@@ -134,7 +134,7 @@ func TestSaveAndLoad(t *testing.T) {
 }
 
 func TestNuke(t *testing.T) {
-	seedStoreFile(t, `[{"id":1,"title":"Test Todo","done":false}]`)
+	seedStoreFile(t, `[{"id":"1","title":"Test Todo","done":false}]`)
 	if err := Nuke(); err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 type Todo struct {
-	ID        int        `json:"id"`
+	ID        string     `json:"id"`
 	Title     string     `json:"title"`
 	Done      bool       `json:"done"`
 	Deleted   bool       `json:"deleted"`
@@ -53,7 +53,7 @@ func Load() ([]Todo, error) {
 	return todos, nil
 }
 
-func LoadAndFindIndexByID(id int) ([]Todo, int, error) {
+func LoadAndFindIndexByID(id string) ([]Todo, int, error) {
 	todos, err := Load()
 	if err != nil {
 		return nil, -1, err

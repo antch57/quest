@@ -103,8 +103,9 @@ func printTable(todos []store.Todo) {
 
 func ListCmd() *cli.Command {
 	return &cli.Command{
-		Name:  "list",
-		Usage: "list all todos",
+		Name:      "list",
+		Usage:     "list all todos",
+		UsageText: "quest log list [options]",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "all",

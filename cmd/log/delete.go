@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/antch57/quest/store"
@@ -13,36 +12,27 @@ import (
 
 func DeleteCmd() *cli.Command {
 	return &cli.Command{
-		Name:  "delete",
-		Usage: "delete task by id",
+		Name:      "delete",
+		Usage:     "delete task by id",
+		UsageText: "quest log delete --id <task id>",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "id",
-				Usage: "id of the task to delete",
+				Name:     "id",
+				Usage:    "id of the task to delete (required)",
+				Required: true,
 			},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			idStr := c.String("id")
-			if idStr == "" {
-				return fmt.Errorf("usage: quest log delete --id <task id>")
-			}
-
-			id, err := strconv.Atoi(idStr)
-			if err != nil {
-				return err
-			}
-
+			id := c.String("id")
 			todos, idx, err := store.LoadAndFindIndexByID(id)
 			if err != nil {
 				if err == os.ErrNotExist {
-					return fmt.Errorf("task with id %d not found", id)
+					return fmt.Errorf("task with id %s not found", id)
 				}
 				return err
 			}
-
 			todos[idx].Deleted = true
 			fmt.Printf("you have deleted: \"%s\"\n", todos[idx].Title)
-
 			return store.Save(todos)
 		},
 	}
@@ -50,8 +40,9 @@ func DeleteCmd() *cli.Command {
 
 func NukeCmd() *cli.Command {
 	return &cli.Command{
-		Name:  "nuke",
-		Usage: "delete .quest/todo.json file",
+		Name:      "nuke",
+		Usage:     "delete .quest/todo.json file",
+		UsageText: "quest log nuke",
 		Action: func(ctx context.Context, c *cli.Command) error {
 			fmt.Print("are you sure you want to nuke all tasks? (y/n): ")
 			var response string
