@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/antch57/quest/compare/v0.1.3...v0.1.4) (2026-04-26)
+
+
+### Bug Fixes
+
+* QUEST-00 - enable auto merge for please-release action ([#21](https://github.com/antch57/quest/issues/21)) ([4927181](https://github.com/antch57/quest/commit/49271818674d6b29656643581ab14cb26be3bdf3))
+
 ## [0.1.3](https://github.com/antch57/quest/compare/v0.1.2...v0.1.3) (2026-04-26)
 
 
