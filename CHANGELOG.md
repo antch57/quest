@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.4](https://github.com/antch57/quest/compare/v0.1.3...v0.1.4) (2026-04-26)
+
+
+### Bug Fixes
+
+* QUEST-00 - enable auto merge for please-release action ([#21](https://github.com/antch57/quest/issues/21)) ([4927181](https://github.com/antch57/quest/commit/49271818674d6b29656643581ab14cb26be3bdf3))
+* QUEST-00 - fix enable-auto-merge syntax ([#25](https://github.com/antch57/quest/issues/25)) ([d74165e](https://github.com/antch57/quest/commit/d74165e064e88d854ff51bc2032aef46fca7044e))
+* QUEST-00 - fix if conditional on enable auto merge workflow ([#23](https://github.com/antch57/quest/issues/23)) ([d9d8586](https://github.com/antch57/quest/commit/d9d8586c16eacc95abd6d80b1388512ff17d95d1))
+
 ## [0.1.3](https://github.com/antch57/quest/compare/v0.1.2...v0.1.3) (2026-04-26)
 
 
