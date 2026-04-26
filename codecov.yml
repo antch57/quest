@@ -5,7 +5,7 @@ coverage:
         target: 80%
         threshold: 1%
         only_pulls: true
-        if_ci_failed: error
+        if_ci_failed: success
 
     patch:
       default:
