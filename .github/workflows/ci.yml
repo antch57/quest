@@ -57,13 +57,10 @@ jobs:
 
       - name: run tests
         run: |
-          go test -v -coverprofile=coverage.out -covermode=atomic ./...
-          go tool cover -func=coverage.out
-          go tool cover -html=coverage.out -o coverage.html
+          go test -v -coverprofile=coverage.txt -covermode=atomic ./...
+          go tool cover -func=coverage.txt
 
-      - name: upload coverage report
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-report
-          path: coverage.html
-          retention-days: 7
+      - name: upload coverage reports to codecov
+          uses: codecov/codecov-action@v5
+          with:
+            token: ${{ secrets.CODECOV_TOKEN }}
