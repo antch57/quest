@@ -68,9 +68,9 @@ See all commands and flags:
 ### 2026-04-25 (current plan)
 - Add command-layer tests for all `quest log` subcommands (create, list, edit, done, delete, nuke)
 - Add a `quest weather` command to fetch and display current weather for a given location
-- Improve help output and flag validation for all commands
-- Add support for user-defined projects/tags on todos
-- Polish CLI UX (error messages, confirmation prompts, etc.)
+- ~~Improve help output and flag validation for all commands~~ (done in v0.1.1)
+- ~~Add support for user-defined projects/tags on todos~~ (done in v0.1.1)
+- ~~Polish CLI UX (error messages, confirmation prompts, etc.)~~ (done in v0.1.1)
 
 ### Future ideas
 - Add a quick note capture flow (`quest note`)
