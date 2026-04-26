@@ -2,7 +2,7 @@ name: Enable auto-merge for release-please PRs
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [labeled]
 
 jobs:
   enable-auto-merge:
