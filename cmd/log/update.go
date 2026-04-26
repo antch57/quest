@@ -57,7 +57,7 @@ func EditCmd() *cli.Command {
 			&cli.StringFlag{
 				Name:    "due",
 				Aliases: []string{"d"},
-				Usage:   "new due date for the todo (format: MM-DD-YYYY)",
+				Usage:   "new due date for the todo (format: mm-dd-yyyy)",
 			},
 			&cli.StringFlag{
 				Name:    "project",

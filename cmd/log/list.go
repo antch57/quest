@@ -55,7 +55,7 @@ func printTable(todos []store.Todo) {
 	t.SetStyle(table.StyleRounded)
 	t.Style().Format.Header = text.FormatDefault
 
-	t.AppendHeader(table.Row{"ID", "Status", "Title", "Project", "Created", "Due"})
+	t.AppendHeader(table.Row{"id", "status", "title", "project", "created", "due"})
 
 	for _, todo := range todos {
 		dueStr := "whenever you want"
@@ -224,7 +224,7 @@ func ListCmd() *cli.Command {
 			}
 
 			if len(filtered) == 0 {
-				fmt.Println("No todos found.")
+				fmt.Println("no todos found")
 				return nil
 			}
 
