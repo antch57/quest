@@ -1,11 +1,12 @@
 
 # quest
 
-[![Build](https://img.shields.io/github/actions/workflow/status/antch57/quest/ci.yml?branch=main)](https://github.com/antch57/quest/actions)
 ![Latest](https://img.shields.io/github/v/release/antch57/quest)
-[![codecov](https://codecov.io/github/antch57/quest/graph/badge.svg?token=7ZEEPESVHP)](https://codecov.io/github/antch57/quest)
-[![Go Report Card](https://goreportcard.com/badge/github.com/antch57/quest)](https://goreportcard.com/report/github.com/antch57/quest)
 [![Go Reference](https://pkg.go.dev/badge/github.com/antch57/quest.svg)](https://pkg.go.dev/github.com/antch57/quest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/antch57/quest)](https://goreportcard.com/report/github.com/antch57/quest)
+[![Build](https://img.shields.io/github/actions/workflow/status/antch57/quest/ci.yml?branch=main)](https://github.com/antch57/quest/actions)
+[![Test](https://img.shields.io/github/actions/workflow/status/antch57/quest/ci.yml?label=tests)](https://github.com/antch57/quest/actions)
+[![codecov](https://codecov.io/github/antch57/quest/graph/badge.svg?token=7ZEEPESVHP)](https://codecov.io/github/antch57/quest)
 ![GitHub issues](https://img.shields.io/github/issues/antch57/quest)
 ![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-blue)
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
