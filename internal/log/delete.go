@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/antch57/quest/store"
+	"github.com/antch57/quest/internal/store"
 	"github.com/urfave/cli/v3"
 )
 

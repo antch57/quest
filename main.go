@@ -5,19 +5,11 @@ import (
 	"log"
 	"os"
 
-	logcmd "github.com/antch57/quest/cmd/log"
-	"github.com/urfave/cli/v3"
+	"github.com/antch57/quest/cmd/quest"
 )
 
 func main() {
-	app := &cli.Command{
-		Name:  "quest",
-		Usage: "get shit done..",
-		Commands: []*cli.Command{
-			logcmd.Command(),
-		},
-	}
-
+	app := quest.App()
 	if err := app.Run(context.Background(), os.Args); err != nil {
 		log.Fatal(err)
 	}
