@@ -10,6 +10,22 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+func deleteAction(id string) ([]store.Todo, error) {
+	todos, idx, err := store.LoadAndFindIndexByID(id)
+	if err != nil {
+		if err == os.ErrNotExist {
+			return nil, fmt.Errorf("task with id %s not found", id)
+		}
+		return nil, err
+	}
+	todos[idx].Deleted = true
+	fmt.Printf("you have deleted: \"%s\"\n", todos[idx].Title)
+	if err := store.Save(todos); err != nil {
+		return nil, err
+	}
+	return todos, nil
+}
+
 func DeleteCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "delete",
@@ -24,18 +40,31 @@ func DeleteCmd() *cli.Command {
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
 			id := c.String("id")
-			todos, idx, err := store.LoadAndFindIndexByID(id)
+			_, err := deleteAction(id)
 			if err != nil {
-				if err == os.ErrNotExist {
-					return fmt.Errorf("task with id %s not found", id)
-				}
-				return err
+				cli.ShowCommandHelp(ctx, c, "delete")
 			}
-			todos[idx].Deleted = true
-			fmt.Printf("you have deleted: \"%s\"\n", todos[idx].Title)
-			return store.Save(todos)
+			return err
 		},
 	}
+}
+
+func nukeAction() error {
+	fmt.Print("are you sure you want to nuke all tasks? (y/n): ")
+	var response string
+	fmt.Scanln(&response)
+
+	if strings.ToLower(response) != "y" {
+		fmt.Println("aborted.")
+		return nil
+	}
+
+	if err := store.Nuke(); err != nil {
+		return err
+	}
+
+	fmt.Println("you have nuked all tasks")
+	return nil
 }
 
 func NukeCmd() *cli.Command {
@@ -44,21 +73,11 @@ func NukeCmd() *cli.Command {
 		Usage:     "delete .quest/todo.json file",
 		UsageText: "quest log nuke",
 		Action: func(ctx context.Context, c *cli.Command) error {
-			fmt.Print("are you sure you want to nuke all tasks? (y/n): ")
-			var response string
-			fmt.Scanln(&response)
-
-			if strings.ToLower(response) != "y" {
-				fmt.Println("aborted.")
-				return nil
+			err := nukeAction()
+			if err != nil {
+				cli.ShowCommandHelp(ctx, c, "nuke")
 			}
-
-			if err := store.Nuke(); err != nil {
-				return err
-			}
-
-			fmt.Println("you have nuked all tasks")
-			return nil
+			return err
 		},
 	}
 }

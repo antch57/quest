@@ -9,6 +9,12 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+type CreateOptions struct {
+	Title   string
+	Due     string
+	Project string
+}
+
 func createID(todos []store.Todo) string {
 	max := 0
 	for _, todo := range todos {
@@ -19,6 +25,37 @@ func createID(todos []store.Todo) string {
 		}
 	}
 	return fmt.Sprintf("%d", max+1)
+}
+
+func createTodo(opts CreateOptions) ([]store.Todo, error) {
+	var dueDate *time.Time
+	if opts.Due != "" {
+		parsedDueDate, err := time.Parse("01-02-2006", opts.Due)
+		if err != nil {
+			return nil, fmt.Errorf("invalid due date format (expected mm-dd-yyyy): %v", err)
+		}
+		dueDate = &parsedDueDate
+	}
+
+	todos, err := store.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	todos = append(todos, store.Todo{
+		ID:        createID(todos),
+		Title:     opts.Title,
+		CreatedAt: time.Now(),
+		DueDate:   dueDate,
+		Project:   opts.Project,
+	})
+
+	if err := store.Save(todos); err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("created todo: %s\n", opts.Title)
+	return todos, nil
 }
 
 func CreateCmd() *cli.Command {
@@ -45,37 +82,16 @@ func CreateCmd() *cli.Command {
 			},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			title := c.String("title")
-			project := c.String("project")
-			dueDateStr := c.String("due")
-
-			var dueDate *time.Time
-			if dueDateStr != "" {
-				parsedDueDate, err := time.Parse("01-02-2006", dueDateStr)
-				if err != nil {
-					cli.ShowCommandHelp(ctx, c, "create")
-					return fmt.Errorf("invalid due date format (expected mm-dd-yyyy): %v", err)
-				}
-				dueDate = &parsedDueDate
+			opts := CreateOptions{
+				Title:   c.String("title"),
+				Project: c.String("project"),
+				Due:     c.String("due"),
 			}
-
-			todos, err := store.Load()
+			_, err := createTodo(opts)
 			if err != nil {
-				return err
+				cli.ShowCommandHelp(ctx, c, "create")
 			}
-
-			todos = append(todos, store.Todo{
-				ID:        createID(todos),
-				Title:     title,
-				CreatedAt: time.Now(),
-				DueDate:   dueDate,
-				Project:   project,
-			})
-			if err := store.Save(todos); err != nil {
-				return err
-			}
-			fmt.Printf("created todo: %s\n", title)
-			return nil
+			return err
 		},
 	}
 }
