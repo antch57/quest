@@ -1,15 +1,10 @@
-
-# quest
-
-![Latest](https://img.shields.io/github/v/release/antch57/quest)
+[![Latest Release](https://img.shields.io/github/v/release/antch57/quest)](https://github.com/antch57/quest/releases)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/antch57/quest/ci.yml?branch=main)](https://github.com/antch57/quest/actions)
 [![Go Reference](https://pkg.go.dev/badge/github.com/antch57/quest.svg)](https://pkg.go.dev/github.com/antch57/quest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/antch57/quest)](https://goreportcard.com/report/github.com/antch57/quest)
-[![Build](https://img.shields.io/github/actions/workflow/status/antch57/quest/ci.yml?branch=main)](https://github.com/antch57/quest/actions)
-[![Test](https://img.shields.io/github/actions/workflow/status/antch57/quest/ci.yml?label=tests)](https://github.com/antch57/quest/actions)
-[![codecov](https://codecov.io/github/antch57/quest/graph/badge.svg?token=7ZEEPESVHP)](https://codecov.io/github/antch57/quest)
-![GitHub issues](https://img.shields.io/github/issues/antch57/quest)
-![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-blue)
-[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Test Coverage](https://codecov.io/github/antch57/quest/graph/badge.svg?token=7ZEEPESVHP)](https://codecov.io/github/antch57/quest)
+
+# quest
 
 Your personal command-line HQ for todos, notes, and daily tools—crafted to grow into a playful, powerful, and endlessly extensible adventurer’s toolkit.
 
