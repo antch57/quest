@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/antch57/quest/compare/v0.2.0...v0.2.1) (2026-05-03)
+
+
+### Bug Fixes
+
+* quest-00 - use pat instead of default gh token ([#35](https://github.com/antch57/quest/issues/35)) ([7578255](https://github.com/antch57/quest/commit/7578255781ff1a537331f2b1285f53f8e98c7ec8))
+* quest-00 - use separate automerge pat ([630f248](https://github.com/antch57/quest/commit/630f2481f8e0ded4a442ed3ad32201f49ae261ec))
+
 ## [0.2.0](https://github.com/antch57/quest/compare/v0.1.4...v0.2.0) (2026-05-03)
 
 
