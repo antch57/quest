@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -71,7 +72,7 @@ func ListCmd() *cli.Command {
 				Overdue:       c.Bool("overdue"),
 				ProjectFilter: c.String("project"),
 			}
-			_, err := listAction(opts)
+			err := listAction(os.Stdout, opts)
 			if err != nil {
 				cli.ShowCommandHelp(ctx, c, "list")
 			}
@@ -80,37 +81,46 @@ func ListCmd() *cli.Command {
 	}
 }
 
-func listAction(opts ListOptions) ([]store.Todo, error) {
-	dateFilterCount := 0
-	for _, enabled := range []bool{opts.Today, opts.Week, opts.Month, opts.Overdue} {
-		if enabled {
-			dateFilterCount++
-		}
+func listAction(w io.Writer, opts ListOptions) error {
+	if err := validateDateFilter(opts); err != nil {
+		return err
 	}
-	if dateFilterCount > 1 {
-		return nil, fmt.Errorf("use only one date filter at a time: --today, --week, --month, or --overdue")
-	}
-
 	todos, err := store.Load()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
+	filtered := filterTodos(todos, opts)
+	if len(filtered) == 0 {
+		fmt.Fprintln(w, "no todos found")
+		return nil
+	}
+	printNotebookHeader(w)
+	printTable(w, filtered)
+	return nil
+}
+
+func filterTodos(todos []store.Todo, opts ListOptions) []store.Todo {
 	var filtered []store.Todo
 	for _, todo := range todos {
 		if shouldShow(opts, todo) {
 			filtered = append(filtered, todo)
 		}
 	}
+	return filtered
+}
 
-	if len(filtered) == 0 {
-		fmt.Println("no todos found")
-		return nil, nil
+func validateDateFilter(opts ListOptions) error {
+	count := 0
+	for _, enabled := range []bool{opts.Today, opts.Week, opts.Month, opts.Overdue} {
+		if enabled {
+			count++
+		}
 	}
-
-	printNotebookHeader()
-	printTable(filtered)
-	return filtered, nil
+	if count > 1 {
+		return fmt.Errorf("use only one date filter at a time: --today, --week, --month, or --overdue")
+	}
+	return nil
 }
 
 func shouldShow(opts ListOptions, todo store.Todo) bool {
@@ -132,12 +142,12 @@ func shouldShow(opts ListOptions, todo store.Todo) bool {
 	return !todo.Done
 }
 
-func printNotebookHeader() {
+func printNotebookHeader(w io.Writer) {
 	accent := text.Colors{text.FgHiCyan}
 	doodle := text.Colors{text.FgHiYellow}
 
 	banner := figure.NewFigure("quest log", "weird", true)
-	fmt.Print(accent.Sprint(banner.String()))
+	fmt.Fprint(w, accent.Sprint(banner.String()))
 	wizard := []string{
 		"/\\___/\\",
 		"( >o.o< )  ~~>~*~*~ FWOOOSH! ~*~*~>~~",
@@ -150,17 +160,17 @@ func printNotebookHeader() {
 	}
 
 	for i := range wizard {
-		fmt.Println(doodle.Sprint(fmt.Sprintf("%-39s%s", wizard[i], enemy[i])))
+		fmt.Fprintln(w, doodle.Sprint(fmt.Sprintf("%-39s%s", wizard[i], enemy[i])))
 	}
-	fmt.Println()
+	fmt.Fprintln(w)
 }
 
-func printTable(todos []store.Todo) {
+func printTable(w io.Writer, todos []store.Todo) {
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
 	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
+	t.SetOutputMirror(w)
 	t.SetStyle(table.StyleRounded)
 	t.Style().Format.Header = text.FormatDefault
 

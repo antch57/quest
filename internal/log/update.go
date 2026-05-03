@@ -2,7 +2,9 @@ package log
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -20,20 +22,20 @@ type EditOptions struct {
 	Undone   bool
 }
 
-func doneAction(id string) ([]store.Todo, error) {
+func doneAction(w io.Writer, id string) error {
 	todos, idx, err := store.LoadAndFindIndexByID(id)
 	if err != nil {
-		if err == os.ErrNotExist {
-			return nil, fmt.Errorf("task with id %s not found", id)
+		if errors.Is(err, store.ErrNotFound) {
+			return fmt.Errorf("task with id %s not found", id)
 		}
-		return nil, err
+		return err
 	}
 	todos[idx].Done = true
-	fmt.Printf("you have completed: \"%s\"\n", todos[idx].Title)
+	fmt.Fprintf(w, "you have completed: \"%s\"\n", todos[idx].Title)
 	if err := store.Save(todos); err != nil {
-		return nil, err
+		return err
 	}
-	return todos, nil
+	return nil
 }
 
 func DoneCmd() *cli.Command {
@@ -50,7 +52,7 @@ func DoneCmd() *cli.Command {
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
 			id := c.String("id")
-			_, err := doneAction(id)
+			err := doneAction(os.Stdout, id)
 			if err != nil {
 				cli.ShowCommandHelp(ctx, c, "done")
 			}
@@ -59,20 +61,20 @@ func DoneCmd() *cli.Command {
 	}
 }
 
-func editAction(opts EditOptions) (store.Todo, error) {
+func editAction(w io.Writer, opts EditOptions) error {
 	todos, idx, err := store.LoadAndFindIndexByID(opts.ID)
 	if err != nil {
-		if err == os.ErrNotExist {
-			return store.Todo{}, fmt.Errorf("task with id %s not found", opts.ID)
+		if errors.Is(err, store.ErrNotFound) {
+			return fmt.Errorf("task with id %s not found", opts.ID)
 		}
-		return store.Todo{}, err
+		return err
 	}
 
 	if opts.Done && opts.Undone {
-		return store.Todo{}, fmt.Errorf("cannot use both --done and --undone flags at the same time")
+		return fmt.Errorf("cannot use both --done and --undone flags at the same time")
 	}
 	if opts.ClearDue && opts.Due != nil {
-		return store.Todo{}, fmt.Errorf("cannot use both --clear-due and --due flags at the same time")
+		return fmt.Errorf("cannot use both --clear-due and --due flags at the same time")
 	}
 
 	if opts.Title != nil {
@@ -84,7 +86,7 @@ func editAction(opts EditOptions) (store.Todo, error) {
 	if opts.Due != nil {
 		parsedDueDate, err := time.Parse("01-02-2006", *opts.Due)
 		if err != nil {
-			return store.Todo{}, fmt.Errorf("invalid due date format: %v", err)
+			return fmt.Errorf("invalid due date format: %v", err)
 		}
 		todos[idx].DueDate = &parsedDueDate
 	}
@@ -99,12 +101,13 @@ func editAction(opts EditOptions) (store.Todo, error) {
 	}
 
 	if err := store.Save(todos); err != nil {
-		return store.Todo{}, err
+		return err
 	}
 
-	fmt.Printf("you have updated: \"%s\"\n", todos[idx].Title)
-	return todos[idx], nil
+	fmt.Fprintf(w, "you have updated: \"%s\"\n", todos[idx].Title)
+	return nil
 }
+
 func EditCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "edit",
@@ -163,7 +166,7 @@ func EditCmd() *cli.Command {
 				project := c.String("project")
 				opts.Project = &project
 			}
-			_, err := editAction(opts)
+			err := editAction(os.Stdout, opts)
 			if err != nil {
 				cli.ShowCommandHelp(ctx, c, "edit")
 			}

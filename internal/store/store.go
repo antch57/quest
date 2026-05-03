@@ -2,10 +2,13 @@ package store
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"time"
 )
+
+var ErrNotFound = errors.New("todo not found")
 
 type Todo struct {
 	ID        string     `json:"id"`
@@ -39,7 +42,6 @@ func Load() ([]Todo, error) {
 
 	store, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
-		// If the file does not exist, return an empty list of todos
 		return []Todo{}, nil
 	}
 	if err != nil {
@@ -64,8 +66,7 @@ func LoadAndFindIndexByID(id string) ([]Todo, int, error) {
 			return todos, i, nil
 		}
 	}
-
-	return nil, -1, os.ErrNotExist
+	return nil, -1, ErrNotFound
 }
 
 func Save(todos []Todo) error {

@@ -27,19 +27,23 @@ func createID(todos []store.Todo) string {
 	return fmt.Sprintf("%d", max+1)
 }
 
-func createTodo(opts CreateOptions) ([]store.Todo, error) {
+func createTodo(opts CreateOptions) error {
+	if opts.Title == "" {
+		return fmt.Errorf("title is required")
+	}
+
 	var dueDate *time.Time
 	if opts.Due != "" {
 		parsedDueDate, err := time.Parse("01-02-2006", opts.Due)
 		if err != nil {
-			return nil, fmt.Errorf("invalid due date format (expected mm-dd-yyyy): %v", err)
+			return fmt.Errorf("invalid due date format (expected mm-dd-yyyy): %v", err)
 		}
 		dueDate = &parsedDueDate
 	}
 
 	todos, err := store.Load()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	todos = append(todos, store.Todo{
@@ -51,11 +55,11 @@ func createTodo(opts CreateOptions) ([]store.Todo, error) {
 	})
 
 	if err := store.Save(todos); err != nil {
-		return nil, err
+		return err
 	}
 
 	fmt.Printf("created todo: %s\n", opts.Title)
-	return todos, nil
+	return nil
 }
 
 func CreateCmd() *cli.Command {
@@ -87,7 +91,7 @@ func CreateCmd() *cli.Command {
 				Project: c.String("project"),
 				Due:     c.String("due"),
 			}
-			_, err := createTodo(opts)
+			err := createTodo(opts)
 			if err != nil {
 				cli.ShowCommandHelp(ctx, c, "create")
 			}
