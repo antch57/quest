@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/antch57/quest/compare/v0.1.4...v0.2.0) (2026-05-03)
+
+
+### Features
+
+* quest-00 - write tests, add makefile ([#33](https://github.com/antch57/quest/issues/33)) ([9f783c6](https://github.com/antch57/quest/commit/9f783c674c79f529483ec87730a5cbae0fa96bdd))
+
 ## [0.1.4](https://github.com/antch57/quest/compare/v0.1.3...v0.1.4) (2026-04-26)
 
 
