@@ -36,7 +36,7 @@ go install github.com/antch57/quest@latest
 
 Add a todo:
 ```sh
-./quest log create --title "Buy milk" --due 2026-05-01
+./quest log create --title "Buy milk" --due 05-01-2026
 ```
 
 List todos:

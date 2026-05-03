@@ -2,7 +2,9 @@ package log
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -10,20 +12,20 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func deleteAction(id string) ([]store.Todo, error) {
+func deleteAction(id string) error {
 	todos, idx, err := store.LoadAndFindIndexByID(id)
 	if err != nil {
-		if err == os.ErrNotExist {
-			return nil, fmt.Errorf("task with id %s not found", id)
+		if errors.Is(err, store.ErrNotFound) {
+			return fmt.Errorf("task with id %s not found", id)
 		}
-		return nil, err
+		return err
 	}
 	todos[idx].Deleted = true
 	fmt.Printf("you have deleted: \"%s\"\n", todos[idx].Title)
 	if err := store.Save(todos); err != nil {
-		return nil, err
+		return err
 	}
-	return todos, nil
+	return nil
 }
 
 func DeleteCmd() *cli.Command {
@@ -40,7 +42,7 @@ func DeleteCmd() *cli.Command {
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
 			id := c.String("id")
-			_, err := deleteAction(id)
+			err := deleteAction(id)
 			if err != nil {
 				cli.ShowCommandHelp(ctx, c, "delete")
 			}
@@ -49,10 +51,10 @@ func DeleteCmd() *cli.Command {
 	}
 }
 
-func nukeAction() error {
+func nukeAction(r io.Reader) error {
 	fmt.Print("are you sure you want to nuke all tasks? (y/n): ")
 	var response string
-	fmt.Scanln(&response)
+	fmt.Fscan(r, &response)
 
 	if strings.ToLower(response) != "y" {
 		fmt.Println("aborted.")
@@ -73,7 +75,7 @@ func NukeCmd() *cli.Command {
 		Usage:     "delete .quest/todo.json file",
 		UsageText: "quest log nuke",
 		Action: func(ctx context.Context, c *cli.Command) error {
-			err := nukeAction()
+			err := nukeAction(os.Stdin)
 			if err != nil {
 				cli.ShowCommandHelp(ctx, c, "nuke")
 			}
