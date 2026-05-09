@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/antch57/quest/compare/v0.2.1...v0.2.2) (2026-05-09)
+
+
+### Bug Fixes
+
+* quest-00 - cut new version for go docs.. dull cleanup of readme ([#41](https://github.com/antch57/quest/issues/41)) ([46e763b](https://github.com/antch57/quest/commit/46e763b2714b362401d50e0a9d6b3d86579627c8))
+
 ## [0.2.1](https://github.com/antch57/quest/compare/v0.2.0...v0.2.1) (2026-05-03)
 
 
