@@ -37,23 +37,18 @@ quest log list
 quest log --help
 ```
 
----
-
 ## release notes
 
 release notes and changelog are managed automatically by [release-please](https://github.com/google-github-actions/release-please-action) and can be found in the [github releases](../../releases) tab.
 
 ## how to contribute
 
-1. fork and clone the repo
-2. create a feature branch
-3. use conventional commits (e.g., `feat:`, `fix:`, `chore:`)
-4. open a pr (template auto-populates)
-5. all changes require pr review and ci to pass
-6. run `gofmt`, `go vet`, and tests before pushing
-7. see the pr template for checklist
-
----
+1. fork or clone repo
+1. create a feature branch
+1. use conventional commits (e.g., `feat:`, `fix:`, `chore:`)
+1. open a pr
+1. see the pr template for checklist
+1. all changes require pr review and ci to pass
 
 ## license
 
