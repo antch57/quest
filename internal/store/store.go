@@ -1,3 +1,7 @@
+// Package store provides file-backed persistence for quest todos.
+//
+// Todos are stored as JSON in ~/.quest/todos.json. The package exposes
+// helpers to load, save, look up by ID, and remove the store file.
 package store
 
 import (
@@ -8,8 +12,10 @@ import (
 	"time"
 )
 
+// ErrNotFound is returned when a requested todo cannot be found.
 var ErrNotFound = errors.New("todo not found")
 
+// Todo is the persisted model for a single task in the quest store.
 type Todo struct {
 	ID        string     `json:"id"`
 	Title     string     `json:"title"`
@@ -34,6 +40,7 @@ func storePath() (string, error) {
 	return filepath.Join(dir, "todos.json"), nil
 }
 
+// Load reads todos from disk, returning an empty slice when the store does not exist.
 func Load() ([]Todo, error) {
 	path, err := storePath()
 	if err != nil {
@@ -55,6 +62,7 @@ func Load() ([]Todo, error) {
 	return todos, nil
 }
 
+// LoadAndFindIndexByID loads todos and returns the matching todo index for id.
 func LoadAndFindIndexByID(id string) ([]Todo, int, error) {
 	todos, err := Load()
 	if err != nil {
@@ -69,6 +77,7 @@ func LoadAndFindIndexByID(id string) ([]Todo, int, error) {
 	return nil, -1, ErrNotFound
 }
 
+// Save writes todos to disk as indented JSON.
 func Save(todos []Todo) error {
 	path, err := storePath()
 	if err != nil {
@@ -83,6 +92,7 @@ func Save(todos []Todo) error {
 	return os.WriteFile(path, data, 0600)
 }
 
+// Nuke removes the todo store file.
 func Nuke() error {
 	path, err := storePath()
 	if err != nil {

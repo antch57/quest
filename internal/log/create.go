@@ -9,6 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// CreateOptions contains user-provided values used to create a new todo.
 type CreateOptions struct {
 	Title   string
 	Due     string
@@ -62,6 +63,7 @@ func createTodo(opts CreateOptions) error {
 	return nil
 }
 
+// CreateCmd builds the CLI command that creates a new todo item.
 func CreateCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "create",

@@ -28,6 +28,7 @@ func deleteAction(id string) error {
 	return nil
 }
 
+// DeleteCmd builds the CLI command that soft-deletes a todo by ID.
 func DeleteCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "delete",
@@ -69,6 +70,7 @@ func nukeAction(r io.Reader) error {
 	return nil
 }
 
+// NukeCmd builds the CLI command that removes the entire todo store file.
 func NukeCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "nuke",
