@@ -12,6 +12,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// EditOptions defines mutable fields and state flags for editing an existing todo.
 type EditOptions struct {
 	ID       string
 	Title    *string
@@ -38,6 +39,7 @@ func doneAction(w io.Writer, id string) error {
 	return nil
 }
 
+// DoneCmd builds the CLI command that marks a todo as completed.
 func DoneCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "done",
@@ -108,6 +110,7 @@ func editAction(w io.Writer, opts EditOptions) error {
 	return nil
 }
 
+// EditCmd builds the CLI command that updates fields on an existing todo.
 func EditCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "edit",

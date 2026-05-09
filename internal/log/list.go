@@ -14,6 +14,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// ListOptions controls how todos are filtered and displayed by the list command.
 type ListOptions struct {
 	ShowAll       bool
 	ShowDone      bool
@@ -24,6 +25,7 @@ type ListOptions struct {
 	ProjectFilter string
 }
 
+// ListCmd builds the CLI command that lists todos with optional filters.
 func ListCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "list",

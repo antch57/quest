@@ -1,3 +1,4 @@
+// Package quest builds the top-level CLI command for the quest application.
 package quest
 
 import (
@@ -5,6 +6,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// App returns the root CLI command for quest.
 func App() *cli.Command {
 	return &cli.Command{
 		Name:  "quest",
