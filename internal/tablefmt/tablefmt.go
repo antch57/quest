@@ -1,3 +1,4 @@
+// Package tablefmt provides helpers for rendering CLI tables.
 package tablefmt
 
 import (
@@ -7,7 +8,10 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-// Render prints a rounded table with the provided headers and rows.
+// Render writes a rounded text table to w using the provided headers and rows.
+//
+// Each row is appended as-is. If row widths differ from the header width,
+// go-pretty handles the layout during rendering.
 func Render(w io.Writer, headers []string, rows [][]string) {
 	t := table.NewWriter()
 	t.SetOutputMirror(w)

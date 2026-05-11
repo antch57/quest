@@ -1,5 +1,6 @@
 package jambase
 
+// Event is the normalized show record returned by SearchShows.
 type Event struct {
 	Name     string
 	Date     string

@@ -11,12 +11,22 @@ import (
 	"time"
 )
 
+// ErrCityNotFound indicates that no matching city was found in Jambase geographies.
 var ErrCityNotFound = errors.New("city not found")
+
+// ErrCityRequired indicates that the city search option was empty.
 var ErrCityRequired = errors.New("city is required")
+
+// ErrInvalidLimit indicates that the requested limit was negative.
 var ErrInvalidLimit = errors.New("limit must be zero or greater")
+
+// ErrInvalidRadius indicates that the requested radius was negative.
 var ErrInvalidRadius = errors.New("radius must be zero or greater")
+
+// ErrInvalidDate indicates that a date did not match YYYY-MM-DD format.
 var ErrInvalidDate = errors.New("date must use YYYY-MM-DD format")
 
+// SearchOptions defines filters used when searching for events.
 type SearchOptions struct {
 	City      string
 	Country   string
@@ -27,6 +37,10 @@ type SearchOptions struct {
 	VenueName string
 }
 
+// SearchShows queries Jambase for events matching the provided search options.
+//
+// City is required. Country is optional and should be an ISO-2 code when provided.
+// When Limit is greater than zero, returned results are capped to that size.
 func (c *Client) SearchShows(ctx context.Context, opts SearchOptions) ([]Event, error) {
 	opts, err := validateSearchOptions(opts)
 	if err != nil {

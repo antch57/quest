@@ -14,8 +14,10 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// ErrApiKeyMissing is returned when JAMBASE_API_KEY is not set.
 var ErrApiKeyMissing = errors.New("JAMBASE_API_KEY environment variable is required to search for shows")
 
+// SearchOptions defines filters for looking up shows through the Jambase client.
 type SearchOptions = jambase.SearchOptions
 
 type showSearcher interface {
@@ -24,6 +26,7 @@ type showSearcher interface {
 
 const defaultJambaseBaseURL = "https://api.data.jambase.com/v3"
 
+// SearchCmd returns the jamz search subcommand.
 func SearchCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "search",

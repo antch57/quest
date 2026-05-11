@@ -1,3 +1,4 @@
+// Package jambase provides a client for querying the Jambase API.
 package jambase
 
 import (
@@ -9,12 +10,17 @@ import (
 
 const defaultBaseURL = "https://api.data.jambase.com/v3"
 
+// Client wraps HTTP calls to the Jambase API.
 type Client struct {
 	client  *http.Client
 	apiKey  string
 	baseURL string
 }
 
+// NewClient creates a Jambase API client.
+//
+// If client is nil, a default client with a 10-second timeout is used.
+// If baseURL is empty, the production Jambase v3 API URL is used.
 func NewClient(client *http.Client, apiKey string, baseURL string) *Client {
 	if client == nil {
 		client = &http.Client{Timeout: 10 * time.Second}
