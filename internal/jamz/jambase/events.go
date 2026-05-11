@@ -14,9 +14,6 @@ import (
 // ErrCityNotFound indicates that no matching city was found in Jambase geographies.
 var ErrCityNotFound = errors.New("city not found")
 
-// ErrCityRequired indicates that the city search option was empty.
-var ErrCityRequired = errors.New("city is required")
-
 // ErrInvalidLimit indicates that the requested limit was negative.
 var ErrInvalidLimit = errors.New("limit must be zero or greater")
 
@@ -26,7 +23,8 @@ var ErrInvalidRadius = errors.New("radius must be zero or greater")
 // ErrInvalidDate indicates that a date did not match YYYY-MM-DD format.
 var ErrInvalidDate = errors.New("date must use YYYY-MM-DD format")
 
-// SearchOptions defines filters used when searching for events.
+// SearchOptions defines optional filters used when searching for events.
+// All fields are optional; when empty, searches default to all upcoming shows in the US.
 type SearchOptions struct {
 	City      string
 	Country   string
@@ -38,25 +36,27 @@ type SearchOptions struct {
 }
 
 // SearchShows queries Jambase for events matching the provided search options.
-//
-// City is required. Country is optional and should be an ISO-2 code when provided.
-// When Limit is greater than zero, returned results are capped to that size.
+// All search options are optional; when empty, returns all upcoming shows in the US.
+// Results can be filtered by city, artist, venue, date, and radius (if city is provided).
 func (c *Client) SearchShows(ctx context.Context, opts SearchOptions) ([]Event, error) {
 	opts, err := validateSearchOptions(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: this is a bit of a hack - the API requires a metro ID for searching, but users will want to search by city name. We should probably cache metro IDs locally to avoid hitting the API every time, but for now we'll just do a lookup on each search.
-	metroID, err := c.cityToMetroID(ctx, opts.City, opts.Country)
-	if err != nil {
-		if errors.Is(err, ErrCityNotFound) {
-			if opts.Country != "" {
-				return nil, fmt.Errorf("city %q in country %q not found: %w", opts.City, opts.Country, err)
+	var metroID string
+	if opts.City != "" {
+		// TODO: create local cache of city to metro ID mappings to avoid this extra API call on every search
+		metroID, err = c.cityToMetroID(ctx, opts.City, opts.Country)
+		if err != nil {
+			if errors.Is(err, ErrCityNotFound) {
+				if opts.Country != "" {
+					return nil, fmt.Errorf("city %q in country %q not found: %w", opts.City, opts.Country, err)
+				}
+				return nil, fmt.Errorf("city %q not found: %w", opts.City, err)
 			}
-			return nil, fmt.Errorf("city %q not found: %w", opts.City, err)
+			return nil, fmt.Errorf("lookup metro id: %w", err)
 		}
-		return nil, fmt.Errorf("lookup metro id: %w", err)
 	}
 
 	reqURL, err := buildEventsURL(c.baseURL, metroID, opts)
@@ -155,10 +155,6 @@ func validateSearchOptions(opts SearchOptions) (SearchOptions, error) {
 	opts.Date = strings.TrimSpace(opts.Date)
 	opts.VenueName = strings.TrimSpace(opts.VenueName)
 
-	if opts.City == "" {
-		return SearchOptions{}, ErrCityRequired
-	}
-
 	if opts.Limit < 0 {
 		return SearchOptions{}, fmt.Errorf("invalid limit %d: %w", opts.Limit, ErrInvalidLimit)
 	}
@@ -183,7 +179,9 @@ func buildEventsURL(baseURL, metroID string, opts SearchOptions) (string, error)
 	}
 
 	q := base.Query()
-	q.Set("geoMetroId", metroID)
+	if metroID != "" {
+		q.Set("geoMetroId", metroID)
+	}
 	if opts.Artist != "" {
 		q.Set("artistName", opts.Artist)
 	}

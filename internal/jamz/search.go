@@ -17,7 +17,8 @@ import (
 // ErrApiKeyMissing is returned when JAMBASE_API_KEY is not set.
 var ErrApiKeyMissing = errors.New("JAMBASE_API_KEY environment variable is required to search for shows")
 
-// SearchOptions defines filters for looking up shows through the Jambase client.
+// SearchOptions defines optional filters for looking up shows through the Jambase client.
+// All filters are optional; searches default to all upcoming shows in the US.
 type SearchOptions = jambase.SearchOptions
 
 type showSearcher interface {
@@ -31,13 +32,12 @@ func SearchCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "search",
 		Usage:     "search for upcoming shows from Jambase...",
-		UsageText: `quest jamz search --city "Denver"`,
+		UsageText: "quest jamz search --city denver",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:     "city",
-				Aliases:  []string{"c"},
-				Usage:    "city to search around (required)",
-				Required: true,
+				Name:    "city",
+				Aliases: []string{"c"},
+				Usage:   "city to search around",
 			},
 			&cli.StringFlag{
 				Name:  "country",
