@@ -8,51 +8,67 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 var ErrCityNotFound = errors.New("city not found")
+var ErrCityRequired = errors.New("city is required")
+var ErrInvalidLimit = errors.New("limit must be zero or greater")
+var ErrInvalidRadius = errors.New("radius must be zero or greater")
+var ErrInvalidDate = errors.New("date must use YYYY-MM-DD format")
 
 type SearchOptions struct {
-	City    string
-	Country string
-	Artist  string
-	Date    string
-	Limit   int
-	Radius  int
+	City      string
+	Country   string
+	Artist    string
+	Date      string
+	Limit     int
+	Radius    int
+	VenueName string
 }
 
-func SearchShows(ctx context.Context, c *Client, opts SearchOptions) ([]Event, error) {
+func (c *Client) SearchShows(ctx context.Context, opts SearchOptions) ([]Event, error) {
+	opts, err := validateSearchOptions(opts)
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO: this is a bit of a hack - the API requires a metro ID for searching, but users will want to search by city name. We should probably cache metro IDs locally to avoid hitting the API every time, but for now we'll just do a lookup on each search.
-	metroID, err := cityToMetroID(ctx, c, opts.City, "")
+	metroID, err := c.cityToMetroID(ctx, opts.City, opts.Country)
 	if err != nil {
 		if errors.Is(err, ErrCityNotFound) {
-			return nil, fmt.Errorf("city '%s' not found: %w", opts.City, err)
+			if opts.Country != "" {
+				return nil, fmt.Errorf("city %q in country %q not found: %w", opts.City, opts.Country, err)
+			}
+			return nil, fmt.Errorf("city %q not found: %w", opts.City, err)
 		}
-		return nil, err
+		return nil, fmt.Errorf("lookup metro id: %w", err)
 	}
 
-	base, err := url.Parse(c.baseURL + "/events")
+	reqURL, err := buildEventsURL(c.baseURL, metroID, opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("build events request url: %w", err)
 	}
 
-	q := base.Query()
-	q.Set("geoMetroId", metroID)
-	if opts.Artist != "" {
-		q.Set("artistName", opts.Artist)
-	}
-	base.RawQuery = q.Encode()
-
-	req, err := c.newRequest(ctx, http.MethodGet, base.String())
+	req, err := c.newRequest(ctx, http.MethodGet, reqURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("build events request: %w", err)
 	}
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("send events request: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("search shows failed: status %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
+
+	var response apiResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode API response: %w", err)
+	}
 
 	// TODO: here for testing so i don't have to hit the API every time, but should be replaced with a real request
 	// fixture, err := os.Open("internal/jamz/jambase/sample-concert-event.json")
@@ -61,16 +77,19 @@ func SearchShows(ctx context.Context, c *Client, opts SearchOptions) ([]Event, e
 	// 	return nil, err
 	// }
 	// defer fixture.Close()
-
-	var response apiResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, fmt.Errorf("failed to decode API response: %w", err)
-	}
+	// var response apiResponse
+	// if err := json.NewDecoder(fixture).Decode(&response); err != nil {
+	// 	return nil, fmt.Errorf("failed to decode API response: %w", err)
+	// }
 
 	events := make([]Event, 0, len(response.Events))
 	for _, apiEvent := range response.Events {
 		event := transformEvent(&apiEvent)
 		events = append(events, event)
+	}
+
+	if opts.Limit > 0 && len(events) > opts.Limit {
+		events = events[:opts.Limit]
 	}
 
 	return events, nil
@@ -80,9 +99,11 @@ func SearchShows(ctx context.Context, c *Client, opts SearchOptions) ([]Event, e
 func transformEvent(apiEvent *apiEvent) Event {
 	return Event{
 		Name:     apiEvent.Name,
+		Date:     apiEvent.StartDate,
 		DoorTime: apiEvent.DoorTime,
 		Venue:    apiEvent.Location.Name,
 		Address:  formatAddress(&apiEvent.Location.Address),
+		Timezone: apiEvent.Location.Address.Timezone,
 	}
 }
 
@@ -113,30 +134,85 @@ func formatAddress(addr *apiAddress) string {
 	return strings.Join(parts, ", ")
 }
 
-// cityToMetroID looks up the Jambase metro ID for a given city name
-func cityToMetroID(ctx context.Context, c *Client, city string, country string) (string, error) {
-	base, err := url.Parse(c.baseURL + "/geographies/cities")
+func validateSearchOptions(opts SearchOptions) (SearchOptions, error) {
+	opts.City = strings.TrimSpace(opts.City)
+	opts.Country = strings.ToUpper(strings.TrimSpace(opts.Country))
+	opts.Artist = strings.TrimSpace(opts.Artist)
+	opts.Date = strings.TrimSpace(opts.Date)
+	opts.VenueName = strings.TrimSpace(opts.VenueName)
+
+	if opts.City == "" {
+		return SearchOptions{}, ErrCityRequired
+	}
+
+	if opts.Limit < 0 {
+		return SearchOptions{}, fmt.Errorf("invalid limit %d: %w", opts.Limit, ErrInvalidLimit)
+	}
+
+	if opts.Radius < 0 {
+		return SearchOptions{}, fmt.Errorf("invalid radius %d: %w", opts.Radius, ErrInvalidRadius)
+	}
+
+	if opts.Date != "" {
+		if _, err := time.Parse("2006-01-02", opts.Date); err != nil {
+			return SearchOptions{}, fmt.Errorf("invalid date %q: %w", opts.Date, ErrInvalidDate)
+		}
+	}
+
+	return opts, nil
+}
+
+func buildEventsURL(baseURL, metroID string, opts SearchOptions) (string, error) {
+	base, err := url.Parse(baseURL + "/events")
 	if err != nil {
 		return "", err
 	}
 
 	q := base.Query()
-	q.Set("geoCityName", city)
-	if country != "" {
-		q.Set("geoCountryIso2", country)
+	q.Set("geoMetroId", metroID)
+	if opts.Artist != "" {
+		q.Set("artistName", opts.Artist)
+	}
+	if opts.VenueName != "" {
+		q.Set("venueName", opts.VenueName)
+	}
+	if opts.Radius > 0 {
+		q.Set("geoRadiusAmount", fmt.Sprintf("%d", opts.Radius))
+		q.Set("geoRadiusUnits", "mi")
+	}
+	if opts.Date != "" {
+		q.Set("eventDateFrom", opts.Date)
+		q.Set("eventDateTo", opts.Date)
+	}
+	if opts.Limit > 0 {
+		q.Set("perPage", fmt.Sprintf("%d", opts.Limit))
 	}
 	base.RawQuery = q.Encode()
 
-	req, err := c.newRequest(ctx, http.MethodGet, base.String())
+	return base.String(), nil
+}
+
+// cityToMetroID looks up the Jambase metro ID for a given city name
+func (c *Client) cityToMetroID(ctx context.Context, city string, country string) (string, error) {
+	reqURL, err := buildCityLookupURL(c.baseURL, city, country)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("build city lookup request url: %w", err)
+	}
+
+	req, err := c.newRequest(ctx, http.MethodGet, reqURL)
+	if err != nil {
+		return "", fmt.Errorf("build city lookup request: %w", err)
 	}
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("send city lookup request: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("city lookup failed: status %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
 
 	var cityResp apiCity
 	if err := json.NewDecoder(resp.Body).Decode(&cityResp); err != nil {
@@ -149,4 +225,20 @@ func cityToMetroID(ctx context.Context, c *Client, city string, country string) 
 
 	// TODO: handle results with multiple matches (e.g. Denver, CO vs Denver, IA)
 	return cityResp.Cities[0].Metro.Identifier, nil
+}
+
+func buildCityLookupURL(baseURL, city, country string) (string, error) {
+	base, err := url.Parse(baseURL + "/geographies/cities")
+	if err != nil {
+		return "", err
+	}
+
+	q := base.Query()
+	q.Set("geoCityName", city)
+	if country != "" {
+		q.Set("geoCountryIso2", country)
+	}
+	base.RawQuery = q.Encode()
+
+	return base.String(), nil
 }

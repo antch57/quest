@@ -2,18 +2,27 @@ package jamz
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/antch57/quest/internal/jamz/jambase"
+	"github.com/antch57/quest/internal/tablefmt"
 	"github.com/urfave/cli/v3"
 )
 
 var ErrApiKeyMissing = errors.New("JAMBASE_API_KEY environment variable is required to search for shows")
 
 type SearchOptions = jambase.SearchOptions
+
+type showSearcher interface {
+	SearchShows(ctx context.Context, opts SearchOptions) ([]jambase.Event, error)
+}
+
+const defaultJambaseBaseURL = "https://api.data.jambase.com/v3"
 
 func SearchCmd() *cli.Command {
 	return &cli.Command{
@@ -26,6 +35,11 @@ func SearchCmd() *cli.Command {
 				Aliases:  []string{"c"},
 				Usage:    "city to search around (required)",
 				Required: true,
+			},
+			&cli.StringFlag{
+				Name:  "country",
+				Usage: "the two-letter ISO code for a country (optional, defaults to US)",
+				Value: "US",
 			},
 			&cli.StringFlag{
 				Name:    "artist",
@@ -47,46 +61,109 @@ func SearchCmd() *cli.Command {
 				Name:    "limit",
 				Aliases: []string{"n"},
 				Usage:   "maximum number of shows to return",
-				Value:   10,
+			},
+			&cli.StringFlag{
+				Name:    "venue",
+				Aliases: []string{"v"},
+				Usage:   "venue name to filter by",
 			},
 		},
-		Action: func(ctx context.Context, c *cli.Command) error {
-			err := searchAction(ctx, SearchOptions{
-				City:   c.String("city"),
-				Artist: c.String("artist"),
-				Radius: c.Int("radius"),
-				Limit:  c.Int("limit"),
-				Date:   c.String("date"),
-			})
-			if err != nil {
-				if errors.Is(err, ErrApiKeyMissing) {
-					return fmt.Errorf("api key not found: %w", err)
-				}
-				cli.ShowCommandHelp(ctx, c, "search")
-			}
-
-			return err
-		},
+		Action: runSearchCmd,
 	}
 }
 
-func searchAction(ctx context.Context, opts SearchOptions) error {
+func runSearchCmd(ctx context.Context, c *cli.Command) error {
+	apiKey, err := apiKeyFromEnv()
+	if err != nil {
+		return err
+	}
+
+	client := jambaseClient(&http.Client{Timeout: 10 * time.Second}, apiKey, defaultJambaseBaseURL)
+	opts := searchOptionsFromCommand(c)
+
+	return searchAction(ctx, os.Stdout, client, opts)
+}
+
+func apiKeyFromEnv() (string, error) {
 	apiKey := os.Getenv("JAMBASE_API_KEY")
 	if apiKey == "" {
-		return ErrApiKeyMissing
+		return "", ErrApiKeyMissing
 	}
+	return apiKey, nil
+}
 
-	client := jambase.NewClient(apiKey)
-	result, err := jambase.SearchShows(ctx, client, opts)
+func jambaseClient(httpClient *http.Client, apiKey string, baseURL string) *jambase.Client {
+	return jambase.NewClient(
+		httpClient,
+		apiKey,
+		baseURL,
+	)
+}
+
+func searchOptionsFromCommand(c *cli.Command) SearchOptions {
+	return SearchOptions{
+		City:      c.String("city"),
+		Country:   c.String("country"),
+		Artist:    c.String("artist"),
+		Radius:    c.Int("radius"),
+		Limit:     c.Int("limit"),
+		Date:      c.String("date"),
+		VenueName: c.String("venue"),
+	}
+}
+
+func searchAction(ctx context.Context, w io.Writer, s showSearcher, opts SearchOptions) error {
+	result, err := s.SearchShows(ctx, opts)
 	if err != nil {
 		return err
 	}
 
-	formatted, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return err
+	if len(result) == 0 {
+		fmt.Fprintln(w, "no shows found")
+		return nil
 	}
 
-	fmt.Println(string(formatted))
+	rows := make([][]string, 0, len(result))
+	for _, event := range result {
+		eventDate, startTime := formatEventDateAndStartTime(event.Date)
+		rows = append(rows, []string{event.Name, eventDate, formatDoorTime(event.DoorTime), startTime, event.Venue, event.Address, event.Timezone})
+	}
+
+	tablefmt.Render(w, []string{"name", "date", "door time", "start time", "venue", "address", "timezone"}, rows)
 	return nil
+}
+
+func formatEventDateAndStartTime(value string) (string, string) {
+	if value == "" {
+		return "-", "-"
+	}
+
+	layouts := []string{time.RFC3339, "2006-01-02T15:04:05", "2006-01-02"}
+	for _, layout := range layouts {
+		parsed, err := time.Parse(layout, value)
+		if err == nil {
+			if layout == "2006-01-02" {
+				return parsed.Format("Mon Jan 2, 2006"), "-"
+			}
+			return parsed.Format("Mon Jan 2, 2006"), parsed.Format("3:04 PM")
+		}
+	}
+
+	return value, "-"
+}
+
+func formatDoorTime(value string) string {
+	if value == "" {
+		return "-"
+	}
+
+	layouts := []string{"15:04:05", "15:04", time.RFC3339, "2006-01-02T15:04:05"}
+	for _, layout := range layouts {
+		parsed, err := time.Parse(layout, value)
+		if err == nil {
+			return parsed.Format("3:04 PM")
+		}
+	}
+
+	return value
 }

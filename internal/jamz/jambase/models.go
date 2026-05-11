@@ -2,9 +2,11 @@ package jambase
 
 type Event struct {
 	Name     string
+	Date     string
 	DoorTime string
 	Venue    string
 	Address  string
+	Timezone string
 }
 
 type apiResponse struct {
@@ -63,6 +65,7 @@ type apiAddress struct {
 	PostalCode      string           `json:"postalCode"`
 	AddressRegion   apiNamedLocation `json:"addressRegion"`
 	AddressCountry  apiNamedLocation `json:"addressCountry"`
+	Timezone        string           `json:"x-timezone"`
 }
 
 type apiNamedLocation struct {
