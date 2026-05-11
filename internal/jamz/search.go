@@ -15,27 +15,6 @@ var ErrApiKeyMissing = errors.New("JAMBASE_API_KEY environment variable is requi
 
 type SearchOptions = jambase.SearchOptions
 
-func searchAction(ctx context.Context, opts SearchOptions) error {
-	apiKey := os.Getenv("JAMBASE_API_KEY")
-	if apiKey == "" {
-		return ErrApiKeyMissing
-	}
-
-	client := jambase.NewClient(apiKey)
-	result, err := jambase.SearchShows(ctx, client, opts)
-	if err != nil {
-		return err
-	}
-
-	formatted, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(formatted))
-	return nil
-}
-
 func SearchCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "search",
@@ -89,4 +68,25 @@ func SearchCmd() *cli.Command {
 			return err
 		},
 	}
+}
+
+func searchAction(ctx context.Context, opts SearchOptions) error {
+	apiKey := os.Getenv("JAMBASE_API_KEY")
+	if apiKey == "" {
+		return ErrApiKeyMissing
+	}
+
+	client := jambase.NewClient(apiKey)
+	result, err := jambase.SearchShows(ctx, client, opts)
+	if err != nil {
+		return err
+	}
+
+	formatted, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(formatted))
+	return nil
 }
