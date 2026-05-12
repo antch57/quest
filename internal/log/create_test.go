@@ -24,10 +24,7 @@ func seedStoreJSON(t *testing.T, jsonData string) {
 	if err := os.MkdirAll(questDir, 0o700); err != nil {
 		t.Fatalf("os.MkdirAll() error = %v", err)
 	}
-	path := filepath.Join(questDir, store.LogFilePath)
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		t.Fatalf("os.MkdirAll() error = %v", err)
-	}
+	path := filepath.Join(questDir, "todos.json")
 	if err := os.WriteFile(path, []byte(jsonData), 0o600); err != nil {
 		t.Fatalf("os.WriteFile() error = %v", err)
 	}

@@ -2,7 +2,6 @@ package log
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -106,7 +105,7 @@ func Test_nukeAction(t *testing.T) {
 				t.Errorf("nukeAction() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			path := filepath.Join(os.Getenv("HOME"), ".quest", store.LogFilePath)
+			path := os.Getenv("HOME") + "/.quest/todos.json"
 
 			_, err := os.Stat(path)
 			gotStoreExist := !os.IsNotExist(err)

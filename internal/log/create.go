@@ -42,7 +42,7 @@ func createTodo(opts CreateOptions) error {
 		dueDate = &parsedDueDate
 	}
 
-	todos, err := store.Load(store.LogFilePath)
+	todos, err := store.Load()
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func createTodo(opts CreateOptions) error {
 		Project:   opts.Project,
 	})
 
-	if err := store.Save(store.LogFilePath, todos); err != nil {
+	if err := store.Save(todos); err != nil {
 		return err
 	}
 

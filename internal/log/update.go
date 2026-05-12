@@ -33,7 +33,7 @@ func doneAction(w io.Writer, id string) error {
 	}
 	todos[idx].Done = true
 	fmt.Fprintf(w, "you have completed: \"%s\"\n", todos[idx].Title)
-	if err := store.Save(store.LogFilePath, todos); err != nil {
+	if err := store.Save(todos); err != nil {
 		return err
 	}
 	return nil
@@ -102,7 +102,7 @@ func editAction(w io.Writer, opts EditOptions) error {
 		todos[idx].Project = *opts.Project
 	}
 
-	if err := store.Save(store.LogFilePath, todos); err != nil {
+	if err := store.Save(todos); err != nil {
 		return err
 	}
 
