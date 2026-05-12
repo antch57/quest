@@ -87,7 +87,7 @@ func listAction(w io.Writer, opts ListOptions) error {
 	if err := validateDateFilter(opts); err != nil {
 		return err
 	}
-	todos, err := store.Load()
+	todos, err := store.Load(store.LogFilePath)
 	if err != nil {
 		return err
 	}

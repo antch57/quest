@@ -26,7 +26,10 @@ func seedStoreJSON(t *testing.T, jsonData string) {
 		t.Fatalf("os.MkdirAll() error = %v", err)
 	}
 
-	path := filepath.Join(questDir, "todos.json")
+	path := filepath.Join(questDir, "log", "todos.json")
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		t.Fatalf("os.MkdirAll() error = %v", err)
+	}
 	if err := os.WriteFile(path, []byte(jsonData), 0o600); err != nil {
 		t.Fatalf("os.WriteFile() error = %v", err)
 	}
@@ -38,21 +41,23 @@ func timePtr(t time.Time) *time.Time {
 
 func Test_storePath(t *testing.T) {
 	tests := []struct {
-		name       string
-		wantSuffix string
-		wantErr    bool
+		name        string
+		storagePath string
+		wantSuffix  string
+		wantErr     bool
 	}{
 		{
-			name:       "returns todos path under quest dir",
-			wantSuffix: filepath.Join(".quest", "todos.json"),
-			wantErr:    false,
+			name:        "returns todos path under quest dir",
+			storagePath: filepath.Join("log", "todos.json"),
+			wantSuffix:  filepath.Join(".quest", "log", "todos.json"),
+			wantErr:     false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
 
-			got, err := storePath()
+			got, err := storePath(tt.storagePath)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("storePath() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -64,7 +69,7 @@ func Test_storePath(t *testing.T) {
 			if got != want {
 				t.Errorf("storePath() = %v, want %v", got, want)
 			}
-
+			println("got: %s", got)
 			if info, err := os.Stat(filepath.Dir(got)); err != nil {
 				t.Fatalf("os.Stat() error = %v", err)
 			} else if !info.IsDir() {
@@ -76,15 +81,17 @@ func Test_storePath(t *testing.T) {
 
 func TestLoad(t *testing.T) {
 	tests := []struct {
-		name    string
-		seed    string
-		want    []Todo
-		wantErr bool
+		name     string
+		seed     string
+		filePath string
+		want     []Todo
+		wantErr  bool
 	}{
 		{
-			name:    "missing file returns empty todos",
-			want:    []Todo{},
-			wantErr: false,
+			name:     "missing file returns empty todos",
+			filePath: filepath.Join("log", "todos.json"),
+			want:     []Todo{},
+			wantErr:  false,
 		},
 		{
 			name: "valid json returns todos",
@@ -92,6 +99,7 @@ func TestLoad(t *testing.T) {
 				{"id":"1","title":"task one","done":false},
 				{"id":"2","title":"task two","done":true}
 			]`,
+			filePath: filepath.Join("log", "todos.json"),
 			want: []Todo{
 				{ID: "1", Title: "task one", Done: false},
 				{ID: "2", Title: "task two", Done: true},
@@ -99,9 +107,10 @@ func TestLoad(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "corrupt json returns error",
-			seed:    "{broken-json}",
-			wantErr: true,
+			name:     "corrupt json returns error",
+			seed:     "{broken-json}",
+			filePath: filepath.Join("log", "todos.json"),
+			wantErr:  true,
 		},
 	}
 	for _, tt := range tests {
@@ -111,7 +120,7 @@ func TestLoad(t *testing.T) {
 				seedStoreJSON(t, tt.seed)
 			}
 
-			got, err := Load()
+			got, err := Load(tt.filePath)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Load() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -132,6 +141,7 @@ func TestLoadAndFindIndexByID(t *testing.T) {
 	tests := []struct {
 		name       string
 		seed       string
+		filePath   string
 		args       args
 		want       []Todo
 		want1      int
@@ -144,7 +154,8 @@ func TestLoadAndFindIndexByID(t *testing.T) {
 				{"id":"1","title":"task one","done":false},
 				{"id":"2","title":"task two","done":true}
 			]`,
-			args: args{id: "2"},
+			filePath: filepath.Join("log", "todos.json"),
+			args:     args{id: "2"},
 			want: []Todo{
 				{ID: "1", Title: "task one", Done: false},
 				{ID: "2", Title: "task two", Done: true},
@@ -157,6 +168,7 @@ func TestLoadAndFindIndexByID(t *testing.T) {
 			seed: `[
 				{"id":"1","title":"task one","done":false}
 			]`,
+			filePath:   filepath.Join("log", "todos.json"),
 			args:       args{id: "999"},
 			want1:      -1,
 			wantErr:    true,
@@ -166,6 +178,7 @@ func TestLoadAndFindIndexByID(t *testing.T) {
 			name:       "corrupt json bubbles load error",
 			seed:       "{broken-json}",
 			args:       args{id: "1"},
+			filePath:   filepath.Join("log", "todos.json"),
 			want1:      -1,
 			wantErr:    true,
 			wantNoFile: false,
@@ -206,14 +219,16 @@ func TestSave(t *testing.T) {
 		todos []Todo
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name     string
+		filePath string
+		args     args
+		wantErr  bool
 	}{
 		{
-			name:    "save empty todos",
-			args:    args{todos: []Todo{}},
-			wantErr: false,
+			name:     "save empty todos",
+			args:     args{todos: []Todo{}},
+			filePath: filepath.Join("log", "todos.json"),
+			wantErr:  false,
 		},
 		{
 			name: "save and verify round-trip",
@@ -235,21 +250,22 @@ func TestSave(t *testing.T) {
 					CreatedAt: time.Date(2026, time.May, 3, 12, 0, 0, 0, time.UTC),
 				},
 			}},
-			wantErr: false,
+			filePath: filepath.Join("log", "todos.json"),
+			wantErr:  false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
 
-			if err := Save(tt.args.todos); (err != nil) != tt.wantErr {
+			if err := Save(tt.filePath, tt.args.todos); (err != nil) != tt.wantErr {
 				t.Errorf("Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.wantErr {
 				return
 			}
 
-			got, err := Load()
+			got, err := Load(tt.filePath)
 			if err != nil {
 				t.Fatalf("Load() after Save() error = %v", err)
 			}
@@ -264,18 +280,21 @@ func TestNuke(t *testing.T) {
 	tests := []struct {
 		name          string
 		seed          string
+		filePath      string
 		wantErr       bool
 		wantNotExists bool
 	}{
 		{
 			name:          "nukes existing store file",
 			seed:          `[{"id":"1","title":"task one","done":false}]`,
+			filePath:      filepath.Join("log", "todos.json"),
 			wantErr:       false,
 			wantNotExists: true,
 		},
 		{
-			name:    "returns error when store file does not exist",
-			wantErr: true,
+			name:     "returns error when store file does not exist",
+			filePath: filepath.Join("log", "todos.json"),
+			wantErr:  true,
 		},
 	}
 	for _, tt := range tests {
@@ -285,12 +304,12 @@ func TestNuke(t *testing.T) {
 				seedStoreJSON(t, tt.seed)
 			}
 
-			if err := Nuke(); (err != nil) != tt.wantErr {
+			if err := Nuke(tt.filePath); (err != nil) != tt.wantErr {
 				t.Errorf("Nuke() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			if tt.wantNotExists {
-				path, err := storePath()
+				path, err := storePath(tt.filePath)
 				if err != nil {
 					t.Fatalf("storePath() error = %v", err)
 				}

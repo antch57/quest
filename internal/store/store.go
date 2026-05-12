@@ -15,6 +15,8 @@ import (
 // ErrNotFound is returned when a requested todo cannot be found.
 var ErrNotFound = errors.New("todo not found")
 
+const LogFilePath = "log/todos.json"
+
 // Todo is the persisted model for a single task in the quest store.
 type Todo struct {
 	ID        string     `json:"id"`
@@ -26,23 +28,23 @@ type Todo struct {
 	Project   string     `json:"project,omitempty"`
 }
 
-func storePath() (string, error) {
+func storePath(pathToFile string) (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
 
-	dir := filepath.Join(home, ".quest")
+	dir := filepath.Join(home, filepath.Join(".quest", filepath.Dir(pathToFile)))
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "", err
 	}
 
-	return filepath.Join(dir, "todos.json"), nil
+	return filepath.Join(dir, filepath.Base(pathToFile)), nil
 }
 
 // Load reads todos from disk, returning an empty slice when the store does not exist.
-func Load() ([]Todo, error) {
-	path, err := storePath()
+func Load(filePath string) ([]Todo, error) {
+	path, err := storePath(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +66,7 @@ func Load() ([]Todo, error) {
 
 // LoadAndFindIndexByID loads todos and returns the matching todo index for id.
 func LoadAndFindIndexByID(id string) ([]Todo, int, error) {
-	todos, err := Load()
+	todos, err := Load(LogFilePath)
 	if err != nil {
 		return nil, -1, err
 	}
@@ -78,8 +80,8 @@ func LoadAndFindIndexByID(id string) ([]Todo, int, error) {
 }
 
 // Save writes todos to disk as indented JSON.
-func Save(todos []Todo) error {
-	path, err := storePath()
+func Save(filePath string, todos []Todo) error {
+	path, err := storePath(filePath)
 	if err != nil {
 		return err
 	}
@@ -93,8 +95,8 @@ func Save(todos []Todo) error {
 }
 
 // Nuke removes the todo store file.
-func Nuke() error {
-	path, err := storePath()
+func Nuke(filePath string) error {
+	path, err := storePath(filePath)
 	if err != nil {
 		return err
 	}

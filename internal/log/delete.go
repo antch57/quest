@@ -22,7 +22,7 @@ func deleteAction(id string) error {
 	}
 	todos[idx].Deleted = true
 	fmt.Printf("you have deleted: \"%s\"\n", todos[idx].Title)
-	if err := store.Save(todos); err != nil {
+	if err := store.Save(store.LogFilePath, todos); err != nil {
 		return err
 	}
 	return nil
@@ -62,7 +62,7 @@ func nukeAction(r io.Reader) error {
 		return nil
 	}
 
-	if err := store.Nuke(); err != nil {
+	if err := store.Nuke(store.LogFilePath); err != nil {
 		return err
 	}
 
