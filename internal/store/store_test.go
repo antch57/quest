@@ -69,6 +69,7 @@ func Test_storePath(t *testing.T) {
 			if got != want {
 				t.Errorf("storePath() = %v, want %v", got, want)
 			}
+			println("got: %s", got)
 			if info, err := os.Stat(filepath.Dir(got)); err != nil {
 				t.Fatalf("os.Stat() error = %v", err)
 			} else if !info.IsDir() {
