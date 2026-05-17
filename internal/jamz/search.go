@@ -121,6 +121,7 @@ func searchOptionsFromCommand(c *cli.Command) SearchOptions {
 }
 
 func searchAction(ctx context.Context, w io.Writer, s showSearcher, opts SearchOptions) error {
+	fmt.Fprintln(w, "finding jamz... hang tight!")
 	result, err := s.SearchShows(ctx, opts)
 	if err != nil {
 		return err

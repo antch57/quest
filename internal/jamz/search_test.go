@@ -243,10 +243,10 @@ func Test_searchAction(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "prints no shows found for empty result",
-			events:  []jambase.Event{},
-			wantW:   "no shows found\n",
-			wantErr: false,
+			name:         "prints no shows found for empty result",
+			events:       []jambase.Event{},
+			wantContains: []string{"finding jamz", "no shows found"},
+			wantErr:      false,
 		},
 		{
 			name: "renders table for results",
