@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/antch57/quest/compare/v0.3.2...v0.3.3) (2026-05-17)
+
+
+### Bug Fixes
+
+* quest-13 - pull version natively ([#50](https://github.com/antch57/quest/issues/50)) ([644d3f5](https://github.com/antch57/quest/commit/644d3f5ac392b10caafc81686979735a30909944))
+
 ## [0.3.2](https://github.com/antch57/quest/compare/v0.3.1...v0.3.2) (2026-05-17)
 
 
