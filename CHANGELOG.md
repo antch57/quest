@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/antch57/quest/compare/v0.3.1...v0.3.2) (2026-05-17)
+
+
+### Bug Fixes
+
+* quest-13 - add version command, update release workflow to auto update version ([#48](https://github.com/antch57/quest/issues/48)) ([276ece4](https://github.com/antch57/quest/commit/276ece4d17105d5ddec5cfeaf62aa4f2ed989560))
+
 ## [0.3.1](https://github.com/antch57/quest/compare/v0.3.0...v0.3.1) (2026-05-17)
 
 
