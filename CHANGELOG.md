@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/antch57/quest/compare/v0.2.2...v0.3.0) (2026-05-17)
+
+
+### Features
+
+* quest-10 - add jamz subcommand ([#44](https://github.com/antch57/quest/issues/44)) ([1d9730a](https://github.com/antch57/quest/commit/1d9730a73f2c9a8da0f8c8887a3ee315b4ca5b47))
+
 ## [0.2.2](https://github.com/antch57/quest/compare/v0.2.1...v0.2.2) (2026-05-09)
 
 
