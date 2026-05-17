@@ -8,25 +8,42 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 )
 
-// newJambaseTestServer starts a local httptest server with path-specific
+// jambaseTestServer starts a local httptest server with path-specific
 // responses. The returned Client is already wired to it.
 // Call the returned cleanup func (or defer it) to shut the server down.
+type testServerStep struct {
+	statusCode int
+	body       string
+	disconnect bool
+}
+
 type testServerRoute struct {
 	statusCode int
 	body       string
+	steps      []testServerStep
 	assert     func(t *testing.T, r *http.Request)
 }
 
-func newJambaseTestServer(t *testing.T, routes map[string]testServerRoute) (*Client, func()) {
+func jambaseTestServer(t *testing.T, routes map[string]testServerRoute) (*Client, *atomic.Int32, func()) {
 	t.Helper()
 	if routes == nil {
 		routes = map[string]testServerRoute{}
 	}
 
+	pathCalls := &routeCallTracker{calls: make(map[string]int)}
+	requestCount := &atomic.Int32{}
+
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount.Add(1)
+		var step *testServerStep
+		var statusCode int
+		var body string
+
 		w.Header().Set("Content-Type", "application/json")
 
 		route, ok := routes[r.URL.Path]
@@ -40,20 +57,60 @@ func newJambaseTestServer(t *testing.T, routes map[string]testServerRoute) (*Cli
 			route.assert(t, r)
 		}
 
-		statusCode := route.statusCode
+		if len(route.steps) > 0 {
+			idx := pathCalls.next(r.URL.Path)
+			if idx >= len(route.steps) {
+				idx = len(route.steps) - 1
+			}
+			step = &route.steps[idx]
+			statusCode = step.statusCode
+			body = step.body
+		} else {
+			statusCode = route.statusCode
+			body = route.body
+		}
+
+		if step != nil && step.disconnect {
+			hj, ok := w.(http.Hijacker)
+			if !ok {
+				t.Fatalf("response writer does not support hijacking")
+			}
+
+			conn, _, err := hj.Hijack()
+			if err != nil {
+				t.Fatalf("hijack failed: %v", err)
+			}
+			_ = conn.Close()
+			return
+		}
+
 		if statusCode == 0 {
 			statusCode = http.StatusOK
 		}
 
 		w.WriteHeader(statusCode)
-		_, _ = w.Write([]byte(route.body))
+		_, _ = w.Write([]byte(body))
 	}))
 	c := &Client{
 		client:  srv.Client(),
 		apiKey:  "test-key",
 		baseURL: srv.URL,
 	}
-	return c, srv.Close
+	return c, requestCount, srv.Close
+}
+
+type routeCallTracker struct {
+	mu    sync.Mutex
+	calls map[string]int
+}
+
+func (r *routeCallTracker) next(path string) int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	current := r.calls[path]
+	r.calls[path] = current + 1
+	return current
 }
 
 func TestClient_SearchShows(t *testing.T) {
@@ -367,7 +424,7 @@ func TestClient_SearchShows(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c, cleanup := newJambaseTestServer(t, tt.routes)
+			c, _, cleanup := jambaseTestServer(t, tt.routes)
 			defer cleanup()
 			c.apiKey = tt.fields.apiKey
 
@@ -544,11 +601,22 @@ func Test_validateSearchOptions(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "invalid limit",
+			name: "invalid limit too low",
 			args: args{
 				opts: SearchOptions{
 					Country: "US",
 					Limit:   -5,
+				},
+			},
+			want:    SearchOptions{},
+			wantErr: true,
+		},
+		{
+			name: "invalid limit too high",
+			args: args{
+				opts: SearchOptions{
+					Country: "US",
+					Limit:   150,
 				},
 			},
 			want:    SearchOptions{},
@@ -784,7 +852,7 @@ func TestClient_cityToMetroID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c, cleanup := newJambaseTestServer(t, tt.routes)
+			c, _, cleanup := jambaseTestServer(t, tt.routes)
 			defer cleanup()
 			c.apiKey = tt.fields.apiKey
 			if tt.baseURL != "" {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -14,9 +15,12 @@ import (
 type mockShowSearcher struct {
 	events []jambase.Event
 	err    error
+	opts   []SearchOptions
 }
 
-func (m mockShowSearcher) SearchShows(_ context.Context, _ SearchOptions) ([]jambase.Event, error) {
+func (m *mockShowSearcher) SearchShows(_ context.Context, opts SearchOptions) ([]jambase.Event, error) {
+	m.opts = append(m.opts, opts)
+
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -31,6 +35,7 @@ func TestSearchCmd(t *testing.T) {
 		wantFlags   int
 		wantCountry string
 		wantRadius  int
+		wantLimit   int
 		wantAction  bool
 	}{
 		{
@@ -40,6 +45,7 @@ func TestSearchCmd(t *testing.T) {
 			wantFlags:   7,
 			wantCountry: "US",
 			wantRadius:  25,
+			wantLimit:   25,
 			wantAction:  true,
 		},
 	}
@@ -67,8 +73,11 @@ func TestSearchCmd(t *testing.T) {
 				t.Errorf("SearchCmd().Action present = %v, want %v", got.Action != nil, tt.wantAction)
 			}
 
-			var countryValue string
-			var radiusValue int
+			var (
+				countryValue string
+				radiusValue  int
+				limitValue   int
+			)
 			for _, flag := range got.Flags {
 				switch f := flag.(type) {
 				case *cli.StringFlag:
@@ -78,6 +87,9 @@ func TestSearchCmd(t *testing.T) {
 				case *cli.IntFlag:
 					if f.Name == "radius" {
 						radiusValue = f.Value
+					}
+					if f.Name == "limit" {
+						limitValue = f.Value
 					}
 				}
 			}
@@ -89,16 +101,25 @@ func TestSearchCmd(t *testing.T) {
 			if radiusValue != tt.wantRadius {
 				t.Errorf("SearchCmd().radius default = %d, want %d", radiusValue, tt.wantRadius)
 			}
+
+			if limitValue != tt.wantLimit {
+				t.Errorf("SearchCmd().limit default = %d, want %d", limitValue, tt.wantLimit)
+			}
 		})
 	}
 }
 
 func Test_runSearchCmd(t *testing.T) {
 	tests := []struct {
-		name    string
-		apiKey  string
-		wantErr bool
-		errIs   error
+		name        string
+		apiKey      string
+		injectMock  bool
+		wantErr     bool
+		errIs       error
+		wantCalls   int
+		wantCountry string
+		wantRadius  int
+		wantLimit   int
 	}{
 		{
 			name:    "missing API key returns ErrApiKeyMissing",
@@ -106,11 +127,33 @@ func Test_runSearchCmd(t *testing.T) {
 			wantErr: true,
 			errIs:   ErrApiKeyMissing,
 		},
+		{
+			name:        "uses injected searcher for successful execution",
+			apiKey:      "test-api-key",
+			injectMock:  true,
+			wantErr:     false,
+			wantCalls:   1,
+			wantCountry: "US",
+			wantRadius:  25,
+			wantLimit:   25,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("JAMBASE_API_KEY", tt.apiKey)
+
+			var searcher *mockShowSearcher
+			if tt.injectMock {
+				searcher = &mockShowSearcher{events: []jambase.Event{}}
+				prevFactory := newShowSearcher
+				newShowSearcher = func(_ *http.Client, _ string, _ string) showSearcher {
+					return searcher
+				}
+				t.Cleanup(func() {
+					newShowSearcher = prevFactory
+				})
+			}
 
 			err := runSearchCmd(context.Background(), SearchCmd())
 			if (err != nil) != tt.wantErr {
@@ -118,6 +161,25 @@ func Test_runSearchCmd(t *testing.T) {
 			}
 			if tt.errIs != nil && !errors.Is(err, tt.errIs) {
 				t.Errorf("runSearchCmd() error = %v, want errors.Is(..., %v)", err, tt.errIs)
+			}
+
+			if !tt.injectMock {
+				return
+			}
+
+			if len(searcher.opts) != tt.wantCalls {
+				t.Fatalf("injected searcher calls = %d, want %d", len(searcher.opts), tt.wantCalls)
+			}
+
+			gotOpts := searcher.opts[0]
+			if gotOpts.Country != tt.wantCountry {
+				t.Errorf("runSearchCmd() country = %q, want %q", gotOpts.Country, tt.wantCountry)
+			}
+			if gotOpts.Radius != tt.wantRadius {
+				t.Errorf("runSearchCmd() radius = %d, want %d", gotOpts.Radius, tt.wantRadius)
+			}
+			if gotOpts.Limit != tt.wantLimit {
+				t.Errorf("runSearchCmd() limit = %d, want %d", gotOpts.Limit, tt.wantLimit)
 			}
 		})
 	}
@@ -205,7 +267,7 @@ func Test_searchAction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := &bytes.Buffer{}
-			searcher := mockShowSearcher{events: tt.events}
+			searcher := &mockShowSearcher{events: tt.events}
 			if tt.errored {
 				searcher.err = errors.New("boom")
 			}

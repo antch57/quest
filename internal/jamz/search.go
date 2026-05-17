@@ -27,6 +27,10 @@ type showSearcher interface {
 
 const defaultJambaseBaseURL = "https://api.data.jambase.com/v3"
 
+var newShowSearcher = func(httpClient *http.Client, apiKey, baseURL string) showSearcher {
+	return jambaseClient(httpClient, apiKey, baseURL)
+}
+
 // SearchCmd returns the jamz search subcommand.
 func SearchCmd() *cli.Command {
 	return &cli.Command{
@@ -64,6 +68,7 @@ func SearchCmd() *cli.Command {
 				Name:    "limit",
 				Aliases: []string{"n"},
 				Usage:   "maximum number of shows to return",
+				Value:   25,
 			},
 			&cli.StringFlag{
 				Name:    "venue",
@@ -81,7 +86,7 @@ func runSearchCmd(ctx context.Context, c *cli.Command) error {
 		return err
 	}
 
-	client := jambaseClient(&http.Client{Timeout: 10 * time.Second}, apiKey, defaultJambaseBaseURL)
+	client := newShowSearcher(&http.Client{Timeout: 10 * time.Second}, apiKey, defaultJambaseBaseURL)
 	opts := searchOptionsFromCommand(c)
 
 	return searchAction(ctx, os.Stdout, client, opts)

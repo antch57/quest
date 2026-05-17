@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -14,8 +15,8 @@ import (
 // ErrCityNotFound indicates that no matching city was found in Jambase geographies.
 var ErrCityNotFound = errors.New("city not found")
 
-// ErrInvalidLimit indicates that the requested limit was negative.
-var ErrInvalidLimit = errors.New("limit must be zero or greater")
+// ErrInvalidLimit indicates that the requested limit was negative or exceeds the maximum allowed.
+var ErrInvalidLimit = errors.New("limit must be between 0 and 50")
 
 // ErrInvalidRadius indicates that the requested radius was negative.
 var ErrInvalidRadius = errors.New("radius must be zero or greater")
@@ -69,7 +70,7 @@ func (c *Client) SearchShows(ctx context.Context, opts SearchOptions) ([]Event, 
 		return nil, fmt.Errorf("build events request: %w", err)
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.doRequestWithRetry(req)
 	if err != nil {
 		return nil, fmt.Errorf("send events request: %w", err)
 	}
@@ -155,7 +156,7 @@ func validateSearchOptions(opts SearchOptions) (SearchOptions, error) {
 	opts.Date = strings.TrimSpace(opts.Date)
 	opts.VenueName = strings.TrimSpace(opts.VenueName)
 
-	if opts.Limit < 0 {
+	if opts.Limit < 0 || opts.Limit > 50 {
 		return SearchOptions{}, fmt.Errorf("invalid limit %d: %w", opts.Limit, ErrInvalidLimit)
 	}
 
@@ -189,7 +190,7 @@ func buildEventsURL(baseURL, metroID string, opts SearchOptions) (string, error)
 		q.Set("venueName", opts.VenueName)
 	}
 	if opts.Radius > 0 {
-		q.Set("geoRadiusAmount", fmt.Sprintf("%d", opts.Radius))
+		q.Set("geoRadiusAmount", strconv.Itoa(opts.Radius))
 		q.Set("geoRadiusUnits", "mi")
 	}
 	if opts.Date != "" {
@@ -197,7 +198,7 @@ func buildEventsURL(baseURL, metroID string, opts SearchOptions) (string, error)
 		q.Set("eventDateTo", opts.Date)
 	}
 	if opts.Limit > 0 {
-		q.Set("perPage", fmt.Sprintf("%d", opts.Limit))
+		q.Set("perPage", strconv.Itoa(opts.Limit))
 	}
 	base.RawQuery = q.Encode()
 
@@ -216,7 +217,7 @@ func (c *Client) cityToMetroID(ctx context.Context, city string, country string)
 		return "", fmt.Errorf("build city lookup request: %w", err)
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.doRequestWithRetry(req)
 	if err != nil {
 		return "", fmt.Errorf("send city lookup request: %w", err)
 	}

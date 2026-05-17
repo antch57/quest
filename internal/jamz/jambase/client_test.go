@@ -203,3 +203,108 @@ func TestClient_newRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_doRequestWithRetry(t *testing.T) {
+	tests := []struct {
+		name          string
+		routes        map[string]testServerRoute
+		retryAttempts int
+		retryDelay    time.Duration
+		wantStatus    int
+		wantCalls     int32
+		wantErr       bool
+	}{
+		{
+			name: "returns success response without retry",
+			routes: map[string]testServerRoute{
+				"/events": {
+					steps: []testServerStep{{statusCode: http.StatusOK, body: `{"ok":true}`}},
+				},
+			},
+			retryAttempts: 3,
+			retryDelay:    time.Millisecond,
+			wantStatus:    http.StatusOK,
+			wantCalls:     1,
+			wantErr:       false,
+		},
+		{
+			name: "retries and returns final error response status",
+			routes: map[string]testServerRoute{
+				"/events": {
+					steps: []testServerStep{{statusCode: http.StatusBadGateway, body: `{"error":"upstream"}`}},
+				},
+			},
+			retryAttempts: 3,
+			retryDelay:    time.Millisecond,
+			wantStatus:    http.StatusBadGateway,
+			wantCalls:     3,
+			wantErr:       false,
+		},
+		{
+			name: "does not retry non-transient 4xx status",
+			routes: map[string]testServerRoute{
+				"/events": {
+					steps: []testServerStep{{statusCode: http.StatusBadRequest, body: `{"error":"bad request"}`}},
+				},
+			},
+			retryAttempts: 3,
+			retryDelay:    time.Millisecond,
+			wantStatus:    http.StatusBadRequest,
+			wantCalls:     1,
+			wantErr:       false,
+		},
+		{
+			name: "retries after network error and then succeeds",
+			routes: map[string]testServerRoute{
+				"/events": {
+					steps: []testServerStep{
+						{disconnect: true},
+						{statusCode: http.StatusOK, body: `{"ok":true}`},
+					},
+				},
+			},
+			retryAttempts: 3,
+			retryDelay:    time.Millisecond,
+			wantStatus:    http.StatusOK,
+			wantCalls:     2,
+			wantErr:       false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client, calls, cleanup := jambaseTestServer(t, tt.routes)
+			defer cleanup()
+
+			client.retryBaseDelay = tt.retryDelay
+			client.retryMaxAttempts = tt.retryAttempts
+
+			req, err := client.newRequest(context.Background(), http.MethodGet, client.baseURL+"/events")
+			if err != nil {
+				t.Fatalf("newRequest() error = %v", err)
+			}
+
+			resp, err := client.doRequestWithRetry(req)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("doRequestWithRetry() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if tt.wantErr {
+				return
+			}
+
+			if resp == nil {
+				t.Fatalf("doRequestWithRetry() returned nil response")
+			}
+			defer resp.Body.Close()
+
+			if got := calls.Load(); got != tt.wantCalls {
+				t.Fatalf("request count = %d, want %d", got, tt.wantCalls)
+			}
+
+			if resp.StatusCode != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", resp.StatusCode, tt.wantStatus)
+			}
+		})
+	}
+}
