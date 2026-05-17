@@ -1,8 +1,6 @@
 BINARY_NAME := quest
 BUILD_DIR   := ./bin
 CMD_PATH    := .
-VERSION     ?= $(shell git describe --tags --always --dirty 2>/dev/null)
-LDFLAGS     := -s -w -X github.com/antch57/quest/cmd/quest.version=$(VERSION)
 
 .PHONY: all build run install lint vet fmt test coverage clean tidy help
 
@@ -12,7 +10,7 @@ all: build
 ## build: compile the binary into ./bin/quest
 build:
 	@mkdir -p $(BUILD_DIR)
-	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_PATH)
+	go build -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_PATH)
 
 ## run: build and run the CLI (pass args with ARGS="...")
 run: build
@@ -20,7 +18,7 @@ run: build
 
 ## install: install the binary to $GOPATH/bin
 install:
-	go install -ldflags "$(LDFLAGS)" $(CMD_PATH)
+	go install $(CMD_PATH)
 
 ## lint: run golangci-lint on all Go files
 lint:
