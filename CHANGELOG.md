@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/antch57/quest/compare/v0.3.0...v0.3.1) (2026-05-17)
+
+
+### Bug Fixes
+
+* quest-00 - use strconv instead of sprintf to convert int -&gt; string ([#46](https://github.com/antch57/quest/issues/46)) ([1c56997](https://github.com/antch57/quest/commit/1c56997efdfeeaea5ff6dba92af4bf65f820e76a))
+
 ## [0.3.0](https://github.com/antch57/quest/compare/v0.2.2...v0.3.0) (2026-05-17)
 
 
