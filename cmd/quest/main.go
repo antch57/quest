@@ -9,6 +9,8 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+var version = "dev"
+
 // App returns the root CLI command for quest.
 func App() *cli.Command {
 	return &cli.Command{
