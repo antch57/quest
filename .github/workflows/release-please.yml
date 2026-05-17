@@ -15,12 +15,62 @@ name: release-please
 jobs:
   release:
     runs-on: ubuntu-slim
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - name: checkout repo
-        uses: actions/checkout@v6
-
       - name: release-please
+        id: release
         uses: googleapis/release-please-action@v4
         with:
           release-type: go
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+  build:
+    needs: release
+    if: ${{ needs.release.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, darwin, windows]
+        arch: [amd64, arm64]
+        exclude:
+          - os: darwin
+            arch: amd64
+          - os: windows
+            arch: arm64
+          - os: linux
+            arch: arm64
+    env:
+      GOOS: ${{ matrix.os }}
+      GOARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: go mod download
+      - name: Build binary
+        run: |
+          BIN=quest-${{ matrix.os }}-${{ matrix.arch }}
+          if [ "${{ matrix.os }}" = "windows" ]; then BIN="$BIN.exe"; fi
+          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -ldflags "-s -w -X github.com/antch57/quest/cmd/quest.version=${{ needs.release.outputs.tag_name }}" -o $BIN .
+      - name: Upload binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: quest-${{ matrix.os }}-${{ matrix.arch }}
+          path: quest-${{ matrix.os }}-${{ matrix.arch }}*
+
+  upload-assets:
+    needs: [release, build]
+    if: ${{ needs.release.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.release.outputs.tag_name }}
+          files: dist/**/*
