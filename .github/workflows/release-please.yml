@@ -44,6 +44,7 @@ jobs:
     env:
       GOOS: ${{ matrix.os }}
       GOARCH: ${{ matrix.arch }}
+      VERSION: ${{ needs.release.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
@@ -52,9 +53,13 @@ jobs:
       - run: go mod download
       - name: Build binary
         run: |
+          if [ -z "$VERSION" ]; then
+            echo "release version is empty" >&2
+            exit 1
+          fi
           BIN=quest-${{ matrix.os }}-${{ matrix.arch }}
           if [ "${{ matrix.os }}" = "windows" ]; then BIN="$BIN.exe"; fi
-          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -ldflags "-s -w -X github.com/antch57/quest/cmd/quest.version=${{ needs.release.outputs.tag_name }}" -o $BIN .
+          CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build -ldflags "-s -w -X github.com/antch57/quest/cmd/quest.version=$VERSION" -o "$BIN" .
       - name: Upload binary
         uses: actions/upload-artifact@v7
         with:
@@ -66,7 +71,7 @@ jobs:
     if: ${{ needs.release.outputs.release_created == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v4
         with:
           path: dist
       - name: Upload release assets
