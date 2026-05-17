@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/antch57/quest/internal/store"
@@ -25,7 +26,7 @@ func createID(todos []store.Todo) string {
 			max = idInt
 		}
 	}
-	return fmt.Sprintf("%d", max+1)
+	return strconv.Itoa(max + 1)
 }
 
 func createTodo(opts CreateOptions) error {
