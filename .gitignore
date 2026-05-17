@@ -32,3 +32,6 @@ go.work.sum
 .vscode/
 
 bin/**
+
+## testing files
+internal/jamz/jambase/testdata/
