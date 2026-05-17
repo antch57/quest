@@ -85,18 +85,6 @@ func (c *Client) SearchShows(ctx context.Context, opts SearchOptions) ([]Event, 
 		return nil, fmt.Errorf("failed to decode API response: %w", err)
 	}
 
-	// TODO: here for testing so i don't have to hit the API every time, but should be replaced with a real request
-	// fixture, err := os.Open("internal/jamz/jambase/sample-concert-event.json")
-	// fixture, err := os.Open("internal/jamz/jambase/testData/jambase-event-response.json")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// defer fixture.Close()
-	// var response apiResponse
-	// if err := json.NewDecoder(fixture).Decode(&response); err != nil {
-	// 	return nil, fmt.Errorf("failed to decode API response: %w", err)
-	// }
-
 	events := make([]Event, 0, len(response.Events))
 	for _, apiEvent := range response.Events {
 		event := transformEvent(&apiEvent)
