@@ -29,12 +29,40 @@ or, if you have go installed:
 go install github.com/antch57/quest@latest
 ```
 
-### usage
+## subcommands
+
+### log
+
+track and manage tasks from the terminal.
+
+#### usage
 
 ```sh
-quest log create --title "Buy milk" --due 05-01-2026
+quest log create --title "buy milk" --due 05-01-2026
 quest log list
+quest log update --id 1 --title "buy oat milk"
 quest log --help
+```
+
+### jamz
+
+find upcoming shows using the jambase api.
+
+#### setup
+
+set your jambase api key before running searches:
+
+```sh
+export JAMBASE_API_KEY="your-api-key"
+```
+
+#### usage
+
+```sh
+quest jamz search --city denver
+quest jamz search --artist goose --date 2026-06-01
+quest jamz search --city denver --radius 50 --limit 10
+quest jamz --help
 ```
 
 ## release notes
