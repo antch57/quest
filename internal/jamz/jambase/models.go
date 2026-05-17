@@ -30,25 +30,24 @@ type apiEvent struct {
 	Name        string         `json:"name"`
 	Identifier  string         `json:"identifier"`
 	URL         string         `json:"url"`
-	DoorTime    string         `json:"doorTime"`
+	EventStatus string         `json:"eventStatus"`
 	StartDate   string         `json:"startDate"`
 	EndDate     string         `json:"endDate"`
-	EventStatus string         `json:"eventStatus"`
+	DoorTime    string         `json:"doorTime"`
 	Location    apiVenue       `json:"location"`
 	Performers  []apiPerformer `json:"performer"`
 }
 
 type apiVenue struct {
-	Name    string     `json:"name"`
-	Address apiAddress `json:"address"`
+	Name       string     `json:"name"`
+	Identifier string     `json:"identifier"`
+	Address    apiAddress `json:"address"`
 }
 
 type apiPerformer struct {
 	Type              string   `json:"@type"`
 	Name              string   `json:"name"`
 	Identifier        string   `json:"identifier"`
-	URL               string   `json:"url"`
-	Image             string   `json:"image"`
 	DatePublished     string   `json:"datePublished"`
 	DateModified      string   `json:"dateModified"`
 	BandOrMusician    string   `json:"x-bandOrMusician"`

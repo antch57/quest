@@ -9,10 +9,9 @@ import (
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "jamz",
-		Usage: "find some shows and save them to your quest logs...",
+		Usage: "find some shows to go to...",
 		Commands: []*cli.Command{
 			SearchCmd(),
-			SaveCmd(),
 		},
 	}
 }

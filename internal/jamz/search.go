@@ -129,10 +129,10 @@ func searchAction(ctx context.Context, w io.Writer, s showSearcher, opts SearchO
 	rows := make([][]string, 0, len(result))
 	for _, event := range result {
 		eventDate, startTime := formatEventDateAndStartTime(event.Date)
-		rows = append(rows, []string{event.Name, eventDate, formatDoorTime(event.DoorTime), startTime, event.Venue, event.Address, event.Timezone})
+		rows = append(rows, []string{event.Name, eventDate, formatDoorTime(event.DoorTime), startTime, event.Venue, event.Timezone})
 	}
 
-	tablefmt.Render(w, []string{"name", "date", "door time", "start time", "venue", "address", "timezone"}, rows)
+	tablefmt.Render(w, []string{"name", "date", "door time", "start time", "venue", "timezone"}, rows)
 	return nil
 }
 

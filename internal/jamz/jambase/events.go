@@ -46,7 +46,7 @@ func (c *Client) SearchShows(ctx context.Context, opts SearchOptions) ([]Event, 
 
 	var metroID string
 	if opts.City != "" {
-		// TODO: create local cache of city to metro ID mappings to avoid this extra API call on every search
+		// TODO: create local cache of metro IDs to avoid extra API call on every search by city
 		metroID, err = c.cityToMetroID(ctx, opts.City, opts.Country)
 		if err != nil {
 			if errors.Is(err, ErrCityNotFound) {
@@ -246,7 +246,9 @@ func buildCityLookupURL(baseURL, city, country string) (string, error) {
 	}
 
 	q := base.Query()
-	q.Set("geoCityName", city)
+	if city != "" {
+		q.Set("geoCityName", city)
+	}
 	if country != "" {
 		q.Set("geoCountryIso2", country)
 	}
