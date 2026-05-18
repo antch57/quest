@@ -14,14 +14,14 @@ func useTempHome(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 }
 
-func seedStoreJSON(t *testing.T, jsonData string) {
+func seedStoreJSON(t *testing.T, dir, jsonData string) {
 	t.Helper()
 	home := os.Getenv("HOME")
 	if home == "" {
 		t.Fatal("HOME is not set")
 	}
 
-	questDir := filepath.Join(home, ".quest")
+	questDir := filepath.Join(home, ".quest", dir)
 	if err := os.MkdirAll(questDir, 0o700); err != nil {
 		t.Fatalf("os.MkdirAll() error = %v", err)
 	}
@@ -44,7 +44,7 @@ func Test_storePath(t *testing.T) {
 	}{
 		{
 			name:       "returns todos path under quest dir",
-			wantSuffix: filepath.Join(".quest", "todos.json"),
+			wantSuffix: filepath.Join(".quest", "log", "todos.json"),
 			wantErr:    false,
 		},
 	}
@@ -52,9 +52,9 @@ func Test_storePath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
 
-			got, err := storePath()
+			got, err := StorePath("log", "todos.json")
 			if (err != nil) != tt.wantErr {
-				t.Fatalf("storePath() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("StorePath() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.wantErr {
 				return
@@ -77,6 +77,7 @@ func Test_storePath(t *testing.T) {
 func TestLoad(t *testing.T) {
 	tests := []struct {
 		name    string
+		seedDir string
 		seed    string
 		want    []Todo
 		wantErr bool
@@ -87,7 +88,8 @@ func TestLoad(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "valid json returns todos",
+			name:    "valid json returns todos",
+			seedDir: "log",
 			seed: `[
 				{"id":"1","title":"task one","done":false},
 				{"id":"2","title":"task two","done":true}
@@ -100,6 +102,7 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name:    "corrupt json returns error",
+			seedDir: "log",
 			seed:    "{broken-json}",
 			wantErr: true,
 		},
@@ -108,18 +111,18 @@ func TestLoad(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
 			if tt.seed != "" {
-				seedStoreJSON(t, tt.seed)
+				seedStoreJSON(t, tt.seedDir, tt.seed)
 			}
 
-			got, err := Load()
+			got, err := LoadTodo()
 			if (err != nil) != tt.wantErr {
-				t.Fatalf("Load() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("LoadTodo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.wantErr {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Load() = %v, want %v", got, tt.want)
+				t.Errorf("LoadTodo() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -131,6 +134,7 @@ func TestLoadAndFindIndexByID(t *testing.T) {
 	}
 	tests := []struct {
 		name       string
+		seedDir    string
 		seed       string
 		args       args
 		want       []Todo
@@ -139,7 +143,8 @@ func TestLoadAndFindIndexByID(t *testing.T) {
 		wantNoFile bool
 	}{
 		{
-			name: "finds existing id",
+			name:    "finds existing id",
+			seedDir: "log",
 			seed: `[
 				{"id":"1","title":"task one","done":false},
 				{"id":"2","title":"task two","done":true}
@@ -153,7 +158,8 @@ func TestLoadAndFindIndexByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "missing id returns ErrNotFound",
+			name:    "missing id returns ErrNotFound",
+			seedDir: "log",
 			seed: `[
 				{"id":"1","title":"task one","done":false}
 			]`,
@@ -164,6 +170,7 @@ func TestLoadAndFindIndexByID(t *testing.T) {
 		},
 		{
 			name:       "corrupt json bubbles load error",
+			seedDir:    "log",
 			seed:       "{broken-json}",
 			args:       args{id: "1"},
 			want1:      -1,
@@ -175,7 +182,7 @@ func TestLoadAndFindIndexByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
 			if tt.seed != "" {
-				seedStoreJSON(t, tt.seed)
+				seedStoreJSON(t, tt.seedDir, tt.seed)
 			}
 
 			got, got1, err := LoadAndFindIndexByID(tt.args.id)
@@ -242,33 +249,35 @@ func TestSave(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
 
-			if err := Save(tt.args.todos); (err != nil) != tt.wantErr {
-				t.Errorf("Save() error = %v, wantErr %v", err, tt.wantErr)
+			if err := SaveTodo(tt.args.todos); (err != nil) != tt.wantErr {
+				t.Errorf("SaveTodo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.wantErr {
 				return
 			}
 
-			got, err := Load()
+			got, err := LoadTodo()
 			if err != nil {
-				t.Fatalf("Load() after Save() error = %v", err)
+				t.Fatalf("LoadTodo() after SaveTodo() error = %v", err)
 			}
 			if !reflect.DeepEqual(got, tt.args.todos) {
-				t.Errorf("Save()/Load() got = %v, want %v", got, tt.args.todos)
+				t.Errorf("SaveTodo()/LoadTodo() got = %v, want %v", got, tt.args.todos)
 			}
 		})
 	}
 }
 
-func TestNuke(t *testing.T) {
+func TestNukeTodo(t *testing.T) {
 	tests := []struct {
 		name          string
+		seedDir       string
 		seed          string
 		wantErr       bool
 		wantNotExists bool
 	}{
 		{
 			name:          "nukes existing store file",
+			seedDir:       "log",
 			seed:          `[{"id":"1","title":"task one","done":false}]`,
 			wantErr:       false,
 			wantNotExists: true,
@@ -282,17 +291,17 @@ func TestNuke(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
 			if tt.seed != "" {
-				seedStoreJSON(t, tt.seed)
+				seedStoreJSON(t, tt.seedDir, tt.seed)
 			}
 
-			if err := Nuke(); (err != nil) != tt.wantErr {
-				t.Errorf("Nuke() error = %v, wantErr %v", err, tt.wantErr)
+			if err := NukeTodo(); (err != nil) != tt.wantErr {
+				t.Errorf("NukeTodo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			if tt.wantNotExists {
-				path, err := storePath()
+				path, err := StorePath("log", "todos.json")
 				if err != nil {
-					t.Fatalf("storePath() error = %v", err)
+					t.Fatalf("StorePath() error = %v", err)
 				}
 				if _, err := os.Stat(path); !os.IsNotExist(err) {
 					t.Fatalf("expected store file to be removed, stat err = %v", err)

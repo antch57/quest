@@ -15,6 +15,7 @@ func Test_deleteAction(t *testing.T) {
 	tests := []struct {
 		name      string
 		args      args
+		seedDir   string
 		seedTodos []store.Todo
 		wantErr   bool
 		wantTodo  store.Todo
@@ -24,6 +25,7 @@ func Test_deleteAction(t *testing.T) {
 			args: args{
 				id: "1",
 			},
+			seedDir: "log",
 			seedTodos: []store.Todo{
 				{ID: "1", Title: "existing task"},
 				{ID: "2", Title: "other task"},
@@ -36,6 +38,7 @@ func Test_deleteAction(t *testing.T) {
 			args: args{
 				id: "99",
 			},
+			seedDir: "log",
 			seedTodos: []store.Todo{
 				{ID: "1", Title: "existing task"},
 			},
@@ -45,7 +48,7 @@ func Test_deleteAction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
-			seedStoreTodos(t, tt.seedTodos)
+			seedStoreTodos(t, tt.seedDir, tt.seedTodos)
 
 			if err := deleteAction(tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("deleteAction() error = %v, wantErr %v", err, tt.wantErr)
@@ -73,6 +76,7 @@ func Test_nukeAction(t *testing.T) {
 	tests := []struct {
 		name           string
 		args           args
+		seedDir        string
 		seedTodos      []store.Todo
 		wantErr        bool
 		wantStoreExist bool
@@ -82,6 +86,7 @@ func Test_nukeAction(t *testing.T) {
 			args: args{
 				response: "y\n",
 			},
+			seedDir:        "log",
 			seedTodos:      []store.Todo{{ID: "1", Title: "existing task"}},
 			wantErr:        false,
 			wantStoreExist: false,
@@ -91,6 +96,7 @@ func Test_nukeAction(t *testing.T) {
 			args: args{
 				response: "n\n",
 			},
+			seedDir:        "log",
 			seedTodos:      []store.Todo{{ID: "1", Title: "existing task"}},
 			wantErr:        false,
 			wantStoreExist: true,
@@ -99,13 +105,13 @@ func Test_nukeAction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
-			seedStoreTodos(t, tt.seedTodos)
+			seedStoreTodos(t, tt.seedDir, tt.seedTodos)
 
 			if err := nukeAction(strings.NewReader(tt.args.response)); (err != nil) != tt.wantErr {
 				t.Errorf("nukeAction() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			path := os.Getenv("HOME") + "/.quest/todos.json"
+			path := os.Getenv("HOME") + "/.quest/" + tt.seedDir + "/todos.json"
 
 			_, err := os.Stat(path)
 			gotStoreExist := !os.IsNotExist(err)

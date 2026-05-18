@@ -81,7 +81,7 @@ func Test_listAction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
-			seedStoreTodos(t, tt.seedTodos)
+			seedStoreTodos(t, "log", tt.seedTodos)
 
 			if err := listAction(io.Discard, tt.args.opts); (err != nil) != tt.wantErr {
 				t.Errorf("listAction() error = %v, wantErr %v", err, tt.wantErr)

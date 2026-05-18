@@ -14,13 +14,13 @@ func useTempHome(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 }
 
-func seedStoreJSON(t *testing.T, jsonData string) {
+func seedStoreJSON(t *testing.T, dir string, jsonData string) {
 	t.Helper()
 	home := os.Getenv("HOME")
 	if home == "" {
 		t.Fatal("HOME is not set")
 	}
-	questDir := filepath.Join(home, ".quest")
+	questDir := filepath.Join(home, ".quest", dir)
 	if err := os.MkdirAll(questDir, 0o700); err != nil {
 		t.Fatalf("os.MkdirAll() error = %v", err)
 	}
@@ -30,13 +30,13 @@ func seedStoreJSON(t *testing.T, jsonData string) {
 	}
 }
 
-func seedStoreTodos(t *testing.T, todos []store.Todo) {
+func seedStoreTodos(t *testing.T, dir string, todos []store.Todo) {
 	t.Helper()
 	data, err := json.Marshal(todos)
 	if err != nil {
 		t.Fatalf("json.Marshal() error = %v", err)
 	}
-	seedStoreJSON(t, string(data))
+	seedStoreJSON(t, dir, string(data))
 }
 
 func Test_createID(t *testing.T) {

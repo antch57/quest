@@ -22,7 +22,7 @@ func deleteAction(id string) error {
 	}
 	todos[idx].Deleted = true
 	fmt.Printf("you have deleted: \"%s\"\n", todos[idx].Title)
-	if err := store.Save(todos); err != nil {
+	if err := store.SaveTodo(todos); err != nil {
 		return err
 	}
 	return nil
@@ -62,7 +62,7 @@ func nukeAction(r io.Reader) error {
 		return nil
 	}
 
-	if err := store.Nuke(); err != nil {
+	if err := store.NukeTodo(); err != nil {
 		return err
 	}
 
@@ -74,7 +74,7 @@ func nukeAction(r io.Reader) error {
 func NukeCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "nuke",
-		Usage:     "delete .quest/todo.json file",
+		Usage:     "delete .quest/todos.json file",
 		UsageText: "quest log nuke",
 		Action: func(ctx context.Context, c *cli.Command) error {
 			err := nukeAction(os.Stdin)

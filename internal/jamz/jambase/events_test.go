@@ -113,6 +113,7 @@ func (r *routeCallTracker) next(path string) int {
 	return current
 }
 
+// TODO: add tests for retry logic and caching behavior
 func TestClient_SearchShows(t *testing.T) {
 	type fields struct {
 		apiKey string

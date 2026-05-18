@@ -15,6 +15,7 @@ func Test_doneAction(t *testing.T) {
 	tests := []struct {
 		name      string
 		args      args
+		seedDir   string
 		seedTodos []store.Todo
 		wantErr   bool
 		wantDone  bool
@@ -22,6 +23,7 @@ func Test_doneAction(t *testing.T) {
 		{
 			name:      "mark existing task done",
 			args:      args{id: "1"},
+			seedDir:   "log",
 			seedTodos: []store.Todo{{ID: "1", Title: "task", Done: false, CreatedAt: time.Now()}},
 			wantErr:   false,
 			wantDone:  true,
@@ -29,6 +31,7 @@ func Test_doneAction(t *testing.T) {
 		{
 			name:      "mark already done task",
 			args:      args{id: "1"},
+			seedDir:   "log",
 			seedTodos: []store.Todo{{ID: "1", Title: "task", Done: true, CreatedAt: time.Now()}},
 			wantErr:   false,
 			wantDone:  true,
@@ -36,6 +39,7 @@ func Test_doneAction(t *testing.T) {
 		{
 			name:      "missing task id returns error",
 			args:      args{id: "99"},
+			seedDir:   "log",
 			seedTodos: []store.Todo{{ID: "1", Title: "task", Done: false, CreatedAt: time.Now()}},
 			wantErr:   true,
 		},
@@ -43,7 +47,7 @@ func Test_doneAction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
-			seedStoreTodos(t, tt.seedTodos)
+			seedStoreTodos(t, tt.seedDir, tt.seedTodos)
 
 			if err := doneAction(io.Discard, tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("doneAction() error = %v, wantErr %v", err, tt.wantErr)
@@ -174,7 +178,7 @@ func Test_editAction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			useTempHome(t)
-			seedStoreTodos(t, tt.seedTodos)
+			seedStoreTodos(t, "log", tt.seedTodos)
 
 			if err := editAction(io.Discard, tt.args.opts); (err != nil) != tt.wantErr {
 				t.Errorf("editAction() error = %v, wantErr %v", err, tt.wantErr)

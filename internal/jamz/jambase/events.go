@@ -47,16 +47,25 @@ func (c *Client) SearchShows(ctx context.Context, opts SearchOptions) ([]Event, 
 
 	var metroID string
 	if opts.City != "" {
-		// TODO: create local cache of metro IDs to avoid extra API call on every search by city
-		metroID, err = c.cityToMetroID(ctx, opts.City, opts.Country)
-		if err != nil {
-			if errors.Is(err, ErrCityNotFound) {
-				if opts.Country != "" {
-					return nil, fmt.Errorf("city %q in country %q not found: %w", opts.City, opts.Country, err)
+		cachedCityID, err := checkCache(opts.City)
+		if errors.Is(err, ErrorCacheNotFound) {
+			fmt.Println("city not found in cache hitting api.")
+			metroID, err = c.cityToMetroID(ctx, opts.City, opts.Country)
+			if err != nil {
+				if errors.Is(err, ErrCityNotFound) {
+					return nil, fmt.Errorf("city %q not found: %w", opts.City, err)
 				}
-				return nil, fmt.Errorf("city %q not found: %w", opts.City, err)
+				return nil, fmt.Errorf("lookup metro id: %w", err)
 			}
-			return nil, fmt.Errorf("lookup metro id: %w", err)
+
+			if err := saveCache(opts.City, metroID); err != nil {
+				return nil, fmt.Errorf("save metro id to cache: %w", err)
+			}
+		} else if err != nil {
+			return nil, fmt.Errorf("check cache for city metro id: %w", err)
+		} else {
+			fmt.Println("city found in cache.")
+			metroID = cachedCityID
 		}
 	}
 
