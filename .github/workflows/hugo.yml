@@ -38,6 +38,9 @@ jobs:
       - name: build docs
         run: |
           hugo build \
+            --source docs \
+            --themesDir themes \
+            --destination docs/public \
             --gc \
             --minify \
             --baseURL "${{ steps.pages.outputs.base_url }}/"
