@@ -1,0 +1,8 @@
+baseURL = 'https://github.io/antch57/quest'
+locale = 'en-us'
+title = 'My New Hugo Project'
+theme = 'ananke'
+
+[caches]
+  [caches.images]
+    dir = ':cacheDir/images'
