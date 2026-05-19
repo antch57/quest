@@ -1,4 +1,4 @@
-baseURL = 'https://github.io/antch57/quest'
+baseURL = 'https://antch57.github.io/quest/'
 locale = 'en-us'
 title = 'My New Hugo Project'
 theme = 'ananke'
