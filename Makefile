@@ -4,7 +4,7 @@ CMD_PATH    := .
 VERSION     ?= $(shell git describe --tags --always --dirty 2>/dev/null)
 LDFLAGS     := -s -w -X github.com/antch57/quest/cmd/quest.version=$(VERSION)
 
-.PHONY: all build run install lint vet fmt test coverage clean tidy help
+.PHONY: all build run install lint vet fmt test coverage clean tidy docs-serve help
 
 ## all: build the binary (default)
 all: build
@@ -22,7 +22,7 @@ run: build
 install:
 	go install -ldflags "$(LDFLAGS)" $(CMD_PATH)
 
-## lint: run golangci-lint on all Go files
+## lint: run golangci-lint on all go files
 lint:
 	golangci-lint run ./...
 
@@ -30,7 +30,7 @@ lint:
 vet:
 	go vet ./...
 
-## fmt: format all Go source files
+## fmt: format all go source files
 fmt:
 	gofmt -w .
 
@@ -51,6 +51,13 @@ clean:
 tidy:
 	go mod tidy
 	go mod verify
+
+## docs-serve: serve the hugo documentation site locally
+docs-serve:
+	hugo server -D -s docs
+
+docs-clear-cache:
+	hugo mod clean --all -s docs
 
 ## help: list available targets
 help:

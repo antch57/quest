@@ -35,3 +35,8 @@ bin/**
 
 ## testing files
 internal/jamz/jambase/testdata/
+
+## hugo
+**/.hugo_build.lock
+docs/public/
+docs/resources/_gen/
