@@ -2,7 +2,7 @@ name: Build and deploy
 on:
   push:
     branches:
-      - main
+      - docs/quest-20
   workflow_dispatch:
 
 permissions:
