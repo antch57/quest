@@ -39,13 +39,11 @@ jobs:
         run: |
           hugo build \
             --source docs \
-            --themesDir themes \
-            --destination docs/public \
+            --destination public \
             --gc \
             --minify \
             --baseURL "${{ steps.pages.outputs.base_url }}/"
-        working-directory: ./docs
-      - name: Upload artifact
+      - name: upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./docs/public
