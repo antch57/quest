@@ -1,8 +1,9 @@
 [![Latest Release](https://img.shields.io/github/v/release/antch57/quest)](https://github.com/antch57/quest/releases)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/antch57/quest/ci.yml?branch=main)](https://github.com/antch57/quest/actions)
+[![docs](https://img.shields.io/badge/docs-purple?logo=hugo&logoColor=black)](https://antch57.github.io/quest)
+[![ci](https://github.com/antch57/quest/actions/workflows/ci.yml/badge.svg)](https://github.com/antch57/quest/actions/workflows/ci.yml)
+[![Test Coverage](https://codecov.io/github/antch57/quest/graph/badge.svg?token=7ZEEPESVHP)](https://codecov.io/github/antch57/quest)
 [![Go Reference](https://pkg.go.dev/badge/github.com/antch57/quest.svg)](https://pkg.go.dev/github.com/antch57/quest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/antch57/quest)](https://goreportcard.com/report/github.com/antch57/quest)
-[![Test Coverage](https://codecov.io/github/antch57/quest/graph/badge.svg?token=7ZEEPESVHP)](https://codecov.io/github/antch57/quest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # quest
