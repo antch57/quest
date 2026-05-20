@@ -8,7 +8,9 @@
 
 # quest
 
-a personal cli for todos, notes, really whatever you need it to be. quest is lightweight and built to grow into an endlessly extensible toolkit for your daily grind.
+a personal cli toolkit for everyday adventures
+
+track tasks. discover concerts. extend your terminal.
 
 ---
 

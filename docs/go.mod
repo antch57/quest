@@ -1,5 +1,5 @@
-module github.com/antch57/quest
+module github.com/antch57/quest/docs
 
 go 1.26.3
 
-require github.com/alex-shpak/hugo-book v0.0.0-20260517212708-9ab28a9b36cf // indirect
+require github.com/imfing/hextra v0.12.3 // indirect
