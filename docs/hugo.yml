@@ -1,0 +1,75 @@
+baseURL: 'https://antch57.github.io/quest/'
+locale: 'en-us'
+title: 'quest'
+description: a personal cli toolkit for everyday adventures
+
+enableGitInfo: true
+
+# import hextra as module
+module:
+  imports:
+    - path: github.com/imfing/hextra
+
+markup:
+  # allow raw html
+  goldmark:
+    renderer:
+      unsafe: true
+
+  # enable hextra syntax highlight
+  highlight:
+    noClasses: false
+
+menu:
+  main:
+    - name: docs
+      pageRef: /docs
+      weight: 1
+    - name: creator
+      url: "https://github.com/antch57"
+      weight: 2
+    - name: about
+      url: /about
+      weight: 3
+    - name: search
+      weight: 4
+      params:
+        type: search
+    - name: github
+      weight: 5
+      url: "https://github.com/antch57/quest"
+      params:
+        icon: github
+    - name: theme-toggle
+      params:
+        type: theme-toggle
+        weight: 6
+
+# hextra parms
+params:
+  description: quest cli tool documentation
+  displayUpdatedDate: true
+  dateFormat: "January 2, 2006"
+  externalLinkDecoration: true
+
+  navbar:
+    displayTitle: true
+    displayLogo: false
+
+  editURL:
+    enable: true
+    base: "https://github.com/antch57/quest/edit/main/docs/content/"
+
+  theme:
+    default: system
+    displayToggle: false
+
+  footer:
+    enable: true
+    displayCopyright: false
+    displayPoweredBy: true
+    width: normal
+
+caches:
+  images:
+    dir: ':cacheDir/images'
