@@ -68,9 +68,13 @@ quest jamz search --city denver --radius 50 --limit 10
 quest jamz --help
 ```
 
+## docs
+
+for more in depth information checkout the [doc site](https://antch57.github.io/quest).
+
 ## release notes
 
-release notes and changelog are managed automatically by [release-please](https://github.com/google-github-actions/release-please-action) and can be found in the [github releases](../../releases) tab.
+release notes and changelog are managed automatically by [release-please](https://github.com/googleapis/release-please-action) and can be found in the [github releases](../../releases) tab.
 
 ## how to contribute
 
